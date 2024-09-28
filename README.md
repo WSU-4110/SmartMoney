@@ -4,16 +4,16 @@ SmartMoney is a budgeting app built using Expo and React Native. It helps users 
 
 ## Installation
 ### Clone Repo
-''' git clone https://github.com/WSU-4110/SmartMoney.git
-cd SmartMoney '''
+``` git clone https://github.com/WSU-4110/SmartMoney.git```
+```cd SmartMoney ```
 
 ### Install Dependencies
-npm install
+```npm install```
 
 ### Run app
-npx expo start
+```npx expo start```
 
 ### Compile locally (need to set up xcode or android studio)
-npx expo run:ios
+```npx expo run:ios```
 
-npx expo run:android
+```npx expo run:android```
