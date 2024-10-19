@@ -118,6 +118,15 @@ const SettingsPage: FC = () => {
             <Text style={[styles.settingSubText, { color: currentColors.secondary }]}>1.0.0</Text>
           </View>
         </View>
+        
+        {/* Report a Bug */}
+        <View style={styles.sectionContainer}>
+          <Text style={[styles.sectionHeader, { color: currentColors.text }]}>Report</Text>
+          <TouchableOpacity style={styles.settingItem}>
+            <Text style={[styles.settingText, { color: currentColors.text }]}>Report a Bug</Text>
+            <FontAwesome name="angle-right" size={24} color={currentColors.icon} />
+          </TouchableOpacity>
+          </View>
 
         {/* Logout Button */}
         <TouchableOpacity
