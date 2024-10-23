@@ -1,9 +1,9 @@
-import { ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
+import React, { useEffect, useState } from 'react';
+import { ThemeProvider as NavigationThemeProvider, DarkTheme, DefaultTheme } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
-import { ThemeProvider, useTheme } from './themeContext'; // Ensure this path is correct
+import { ThemeProvider } from './themeContext'; // Ensure this path is correct
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -13,20 +13,26 @@ export default function RootLayout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
+  const [theme, setTheme] = useState(DefaultTheme); // Initialize theme state
+  const toggleTheme = () => {
+    setTheme((prevTheme) => (prevTheme.dark ? DefaultTheme : DarkTheme));
+  };
+
   useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync();
     }
   }, [loaded]);
 
-  if (!loaded) {
-    return null; // Or a loading component
-  }
-
+  // Ensure all hooks are called regardless of loading state
   return (
-    <Stack>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="+not-found" />
-    </Stack>
+    <ThemeProvider value={{ theme, toggleTheme }}>
+      <NavigationThemeProvider value={theme}>
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+      </NavigationThemeProvider>
+    </ThemeProvider>
   );
 }
