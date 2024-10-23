@@ -2,19 +2,17 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { DarkTheme, DefaultTheme } from '@react-navigation/native';
 
 interface ThemeContextType {
-  theme: typeof DefaultTheme; // Use a more specific type if needed
+  theme: typeof DefaultTheme; 
   toggleTheme: () => void;
 }
 
-// Create the context
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 interface ThemeProviderProps {
   children: ReactNode;
-  value: ThemeContextType; // Specify that value is required
+  value: ThemeContextType; 
 }
 
-// Define the ThemeProvider component
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children, value }) => {
   return (
     <ThemeContext.Provider value={value}>
@@ -23,7 +21,6 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children, value })
   );
 };
 
-// Hook to use the ThemeContext
 export const useTheme = () => {
   const context = useContext(ThemeContext);
   if (!context) {

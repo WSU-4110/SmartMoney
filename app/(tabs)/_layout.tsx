@@ -4,10 +4,10 @@ import { TabBarIcon } from '@/components/navigation/TabBarIcon';
 import { Colors } from '@/constants/Colors';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { FontAwesome } from '@expo/vector-icons';
-import { useTheme } from '../themeContext'; // Ensure this path is correct
+import { useTheme } from '../themeContext';
 
 export default function TabLayout() {
-  const { theme } = useTheme(); // Get the current theme
+  const { theme } = useTheme();
 
   return (
     <Tabs
@@ -76,7 +76,7 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name="settings" // Ensure this matches the route defined in your settings component
+        name="settings"
         options={{
           title: 'Settings',
           tabBarIcon: ({ color, focused }) => (

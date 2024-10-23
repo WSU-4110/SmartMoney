@@ -2,18 +2,19 @@ import React, { FC } from 'react';
 import {
   View,
   Text,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Switch,
   TouchableOpacity,
 } from 'react-native';
 import { Colors } from '@/constants/Colors';
-import { useTheme } from '../themeContext'; // Adjust the path based on your structure
+import { useTheme } from '../themeContext';
+import { FontAwesome } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const SettingsPage: FC = () => {
-  const { theme, toggleTheme } = useTheme(); // Get the theme and toggleTheme function
-  const currentColors = Colors[theme.dark ? 'dark' : 'light']; // Update this line to use theme
+  const { theme, toggleTheme } = useTheme(); 
+  const currentColors = Colors[theme.dark ? 'dark' : 'light'];
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: currentColors.background }]}>
@@ -26,21 +27,101 @@ const SettingsPage: FC = () => {
           <View style={styles.settingItem}>
             <Text style={[styles.settingText, { color: currentColors.text }]}>Dark Mode</Text>
             <Switch
-              value={theme.dark} // Use theme.dark here
-              onValueChange={toggleTheme} // Use toggleTheme here
+              value={theme.dark} 
+              onValueChange={toggleTheme}
               thumbColor={theme.dark ? currentColors.primary : '#f4f3f4'}
               trackColor={{ false: '#767577', true: currentColors.primary }}
             />
           </View>
         </View>
 
-        {/* Other sections remain unchanged... */}
-        
+        {/* Notifications Section */}
+        <View style={styles.sectionContainer}>
+          <Text style={[styles.sectionHeader, { color: currentColors.text }]}>Notifications</Text>
+          <View style={styles.settingItem}>
+            <Text style={[styles.settingText, { color: currentColors.text }]}>
+              Enable Notifications
+            </Text>
+            <Switch
+              value={true} 
+              onValueChange={() => {}}
+              thumbColor={true ? currentColors.primary : '#f4f3f4'}
+              trackColor={{ false: '#767577', true: currentColors.primary }}
+            />
+          </View>
+        </View>
+
+        {/* Security Section */}
+        <View style={styles.sectionContainer}>
+          <Text style={[styles.sectionHeader, { color: currentColors.text }]}>Security</Text>
+          <View style={styles.settingItem}>
+            <Text style={[styles.settingText, { color: currentColors.text }]}>Use Biometrics</Text>
+            <Switch
+              value={false} 
+              onValueChange={() => {}} 
+              thumbColor={false ? currentColors.primary : '#f4f3f4'}
+              trackColor={{ false: '#767577', true: currentColors.primary }}
+            />
+          </View>
+        </View>
+
+        {/* Account Section */}
+        <View style={styles.sectionContainer}>
+          <Text style={[styles.sectionHeader, { color: currentColors.text }]}>Account</Text>
+          <TouchableOpacity style={styles.settingItem}>
+            <Text style={[styles.settingText, { color: currentColors.text }]}>
+              Change Password
+            </Text>
+            <FontAwesome name="angle-right" size={24} color={currentColors.icon} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.settingItem}>
+            <Text style={[styles.settingText, { color: currentColors.text }]}>
+              Privacy Settings
+            </Text>
+            <FontAwesome name="angle-right" size={24} color={currentColors.icon} />
+          </TouchableOpacity>
+        </View>
+
+        {/* About Section */}
+        <View style={styles.sectionContainer}>
+          <Text style={[styles.sectionHeader, { color: currentColors.text }]}>About</Text>
+          <TouchableOpacity style={styles.settingItem}>
+            <Text style={[styles.settingText, { color: currentColors.text }]}>Terms of Service</Text>
+            <FontAwesome name="angle-right" size={24} color={currentColors.icon} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.settingItem}>
+            <Text style={[styles.settingText, { color: currentColors.text }]}>Privacy Policy</Text>
+            <FontAwesome name="angle-right" size={24} color={currentColors.icon} />
+          </TouchableOpacity>
+          <View style={styles.settingItem}>
+            <Text style={[styles.settingText, { color: currentColors.text }]}>App Version</Text>
+            <Text style={[styles.settingSubText, { color: currentColors.secondary }]}>1.0.0</Text>
+          </View>
+        </View>
+
+        {/* Report a Bug */}
+        <View style={styles.sectionContainer}>
+          <Text style={[styles.sectionHeader, { color: currentColors.text }]}>Report</Text>
+          <TouchableOpacity style={styles.settingItem}>
+            <Text style={[styles.settingText, { color: currentColors.text }]}>Report a Bug</Text>
+            <FontAwesome name="angle-right" size={24} color={currentColors.icon} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Logout Button */}
+        <TouchableOpacity
+          style={[styles.logoutButton, { backgroundColor: currentColors.accent }]}
+        >
+          <Text style={[styles.logoutButtonText, { color: currentColors.background }]}>
+            Log Out
+          </Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
 };
 
+//styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -90,3 +171,5 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+
+export default SettingsPage;
