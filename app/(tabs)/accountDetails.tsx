@@ -35,35 +35,74 @@ const DetailedAccountPage: FC = () => {
 
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null); // You need to provide the accessToken
+
+  // Define the APIAccount interface for the API response
+  interface APIAccount {
+    account_id: number;
+    name: string;
+    balances: {
+      current: number;
+    };
+  }
+
+  // Function to fetch account balances
+  const fetchAccountBalances = async (accessToken: string) => {
+    try {
+      const response = await fetch('http://10.0.0.117:3000/api/account_balances', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ accessToken }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Error fetching account balances');
+      }
+
+      const data = await response.json();
+      return data.accounts; // Assuming the response contains an 'accounts' array
+    } catch (error) {
+      console.error('Error:', error);
+      return [];
+    }
+  };
+
+  // Fetch real accounts using the API
+  const fetchAccounts = async () => {
+    if (!accessToken) {
+      console.error('Access token is not available');
+      return;
+    }
+
+    try {
+      const fetchedAccounts = await fetchAccountBalances(accessToken);
+      if (fetchedAccounts) {
+        const accountData = fetchedAccounts.map((account: APIAccount) => ({
+          id: account.account_id,
+          name: account.name,
+          balance: account.balances.current,
+          transactions: [], // Fetch transactions separately if needed
+        }));
+        setAccounts(accountData);
+        setSelectedAccount(accountData[0]); // Set the first account as selected by default
+      }
+    } catch (error) {
+      console.error('Failed to fetch accounts:', error);
+    }
+  };
 
   useEffect(() => {
-    const fetchAccounts = async () => {
-      const accountData: Account[] = [
-        {
-          id: 1,
-          name: 'Checking Account',
-          balance: 2500,
-          transactions: [
-            { id: 1, date: '2023-10-01', description: 'Grocery Store', amount: -50, type: 'debit' },
-            { id: 2, date: '2023-10-02', description: 'Salary', amount: 3000, type: 'credit' },
-            { id: 3, date: '2023-10-03', description: 'Electricity Bill', amount: -100, type: 'debit' },
-          ],
-        },
-        {
-          id: 2,
-          name: 'Savings Account',
-          balance: 10000,
-          transactions: [
-            { id: 4, date: '2023-09-15', description: 'Interest', amount: 50, type: 'credit' },
-          ],
-        },
-      ];
+    if (accessToken) {
+      fetchAccounts(); // Fetch real accounts when the accessToken is available
+    }
+  }, [accessToken]);
 
-      setAccounts(accountData);
-      setSelectedAccount(accountData[0]);
-    };
-
-    fetchAccounts();
+  // Set the accessToken once Plaid or another authentication system provides it
+  useEffect(() => {
+    // This is where you should set the access token, possibly after a Plaid login or similar process
+    setAccessToken(accessToken); // Replace this with the actual logic to obtain the accessToken
   }, []);
 
   return (
@@ -125,11 +164,7 @@ const DetailedAccountPage: FC = () => {
 
                 <View style={styles.chartContainer}>
                   <LineChart
-                    data={[
-                      { value: 2500 },
-                      { value: 2550 },
-                      { value: 2450 },
-                    ]}
+                    data={[{ value: 2500 }, { value: 2550 }, { value: 2450 }]}
                     width={width - 40}
                     color={currentColors.accent}
                     yAxisColor={currentColors.text}
@@ -138,7 +173,6 @@ const DetailedAccountPage: FC = () => {
                     dataPointsColor={currentColors.accent} 
                     dataPointsRadius={4} 
                     yAxisTextStyle={{ color: currentColors.text }}
-                    
                     backgroundColor={currentColors.background}
                   />
                 </View>
