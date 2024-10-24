@@ -1,40 +1,20 @@
-import React, { FC, useState } from 'react';
+import React, { FC } from 'react';
 import {
   View,
   Text,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Switch,
   TouchableOpacity,
 } from 'react-native';
 import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '../themeContext';
 import { FontAwesome } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const SettingsPage: FC = () => {
-  const colorScheme = useColorScheme();
-  const currentColors = Colors[colorScheme ?? 'light'];
-
-  //state for toggles
-  const [isDarkMode, setIsDarkMode] = useState(colorScheme === 'dark');
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [biometricsEnabled, setBiometricsEnabled] = useState(false);
-
-  const toggleDarkMode = () => {
-    setIsDarkMode((previousState) => !previousState);
-    //logic to switch the app theme will be added here
-  };
-
-  const toggleNotifications = () => {
-    setNotificationsEnabled((previousState) => !previousState);
-    //logic to enable/disable notifications will be added here
-  };
-
-  const toggleBiometrics = () => {
-    setBiometricsEnabled((previousState) => !previousState);
-    //logic to enable/disable biometrics will be added here
-  };
+  const { theme, toggleTheme } = useTheme(); 
+  const currentColors = Colors[theme.dark ? 'dark' : 'light'];
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: currentColors.background }]}>
@@ -47,9 +27,9 @@ const SettingsPage: FC = () => {
           <View style={styles.settingItem}>
             <Text style={[styles.settingText, { color: currentColors.text }]}>Dark Mode</Text>
             <Switch
-              value={isDarkMode}
-              onValueChange={toggleDarkMode}
-              thumbColor={isDarkMode ? currentColors.primary : '#f4f3f4'}
+              value={theme.dark} 
+              onValueChange={toggleTheme}
+              thumbColor={theme.dark ? currentColors.primary : '#f4f3f4'}
               trackColor={{ false: '#767577', true: currentColors.primary }}
             />
           </View>
@@ -63,9 +43,9 @@ const SettingsPage: FC = () => {
               Enable Notifications
             </Text>
             <Switch
-              value={notificationsEnabled}
-              onValueChange={toggleNotifications}
-              thumbColor={notificationsEnabled ? currentColors.primary : '#f4f3f4'}
+              value={true} 
+              onValueChange={() => {}}
+              thumbColor={true ? currentColors.primary : '#f4f3f4'}
               trackColor={{ false: '#767577', true: currentColors.primary }}
             />
           </View>
@@ -77,9 +57,9 @@ const SettingsPage: FC = () => {
           <View style={styles.settingItem}>
             <Text style={[styles.settingText, { color: currentColors.text }]}>Use Biometrics</Text>
             <Switch
-              value={biometricsEnabled}
-              onValueChange={toggleBiometrics}
-              thumbColor={biometricsEnabled ? currentColors.primary : '#f4f3f4'}
+              value={false} 
+              onValueChange={() => {}} 
+              thumbColor={false ? currentColors.primary : '#f4f3f4'}
               trackColor={{ false: '#767577', true: currentColors.primary }}
             />
           </View>
@@ -118,7 +98,7 @@ const SettingsPage: FC = () => {
             <Text style={[styles.settingSubText, { color: currentColors.secondary }]}>1.0.0</Text>
           </View>
         </View>
-        
+
         {/* Report a Bug */}
         <View style={styles.sectionContainer}>
           <Text style={[styles.sectionHeader, { color: currentColors.text }]}>Report</Text>
@@ -126,7 +106,7 @@ const SettingsPage: FC = () => {
             <Text style={[styles.settingText, { color: currentColors.text }]}>Report a Bug</Text>
             <FontAwesome name="angle-right" size={24} color={currentColors.icon} />
           </TouchableOpacity>
-          </View>
+        </View>
 
         {/* Logout Button */}
         <TouchableOpacity
@@ -149,7 +129,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingVertical: 20,
     paddingHorizontal: 20,
-    paddingBottom: 90
+    paddingBottom: 90,
   },
   sectionTitle: {
     fontSize: 28,

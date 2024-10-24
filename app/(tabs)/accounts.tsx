@@ -1,4 +1,3 @@
-//import statements
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -17,8 +16,8 @@ import { FontAwesome } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTheme } from '../themeContext';
 
-//type definitions
 interface Account {
   id: number;
   name: string;
@@ -39,54 +38,52 @@ interface Asset {
   type: string;
 }
 
-//define types for navigation parameters
 type RootStackParamList = {
   AccountDetails: { account: Account };
   CreditCardDetails: { card: CreditCard };
   
-  //to-do: add assets route
 };
 
 const AccountsPage = () => {
-  const colorScheme = useColorScheme();
-  const currentColors = Colors[colorScheme ?? 'light'];
+  const { theme, toggleTheme } = useTheme(); 
+  const currentColors = Colors[theme.dark ? 'dark' : 'light'];
 
-  //type the navigation prop
+
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  //state for accounts, credit cards, and assets
+
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [creditCards, setCreditCards] = useState<CreditCard[]>([]);
   const [assets, setAssets] = useState<Asset[]>([]);
 
-  //state for modal visibility and type
+
   const [modalVisible, setModalVisible] = useState(false);
   const [modalType, setModalType] = useState<'Account' | 'CreditCard' | 'Asset'>('Account');
   const [isEditing, setIsEditing] = useState(false);
   const [editingItemId, setEditingItemId] = useState<number | null>(null);
 
-  //state for new item inputs
+
   const [newName, setNewName] = useState('');
   const [newBalance, setNewBalance] = useState('');
   const [newAvailable, setNewAvailable] = useState('');
   const [newValue, setNewValue] = useState('');
   const [newType, setNewType] = useState('');
 
-  //net worth calculation
+
   const [netWorth, setNetWorth] = useState(0);
 
-  //load data from AsyncStorage
+
   useEffect(() => {
     loadData();
   }, []);
 
-  //calculate net worth whenever data changes
+
   useEffect(() => {
     calculateNetWorth();
     saveData();
   }, [accounts, creditCards, assets]);
 
-  // Functions to load and save data
+
   const loadData = async () => {
     try {
       const accountsData = await AsyncStorage.getItem('accounts');
@@ -111,14 +108,13 @@ const AccountsPage = () => {
     }
   };
 
-  //calculate net worth
   const calculateNetWorth = () => {
     const totalAssets = accounts.reduce((sum, acc) => sum + acc.balance, 0) + assets.reduce((sum, asset) => sum + asset.value, 0);
     const totalLiabilities = creditCards.reduce((sum, card) => sum + card.balance, 0);
     setNetWorth(totalAssets - totalLiabilities);
   };
 
-  //function to add or edit items
+
   const addOrEditItem = () => {
     if (newName.trim() === '') {
       Alert.alert('Error', 'Please enter all required fields.');
@@ -174,7 +170,7 @@ const AccountsPage = () => {
       }
     }
 
-    //reset fields and close modal
+
     resetModal();
   };
 
@@ -189,7 +185,7 @@ const AccountsPage = () => {
     setEditingItemId(null);
   };
 
-  //function to remove an item
+
   const removeItem = (id: number, type: 'Account' | 'CreditCard' | 'Asset') => {
     Alert.alert(
       'Confirm Removal',
@@ -217,7 +213,7 @@ const AccountsPage = () => {
     );
   };
 
-  //function to edit an item
+
   const editItem = (id: number, type: 'Account' | 'CreditCard' | 'Asset') => {
     setModalType(type);
     setIsEditing(true);
@@ -247,14 +243,13 @@ const AccountsPage = () => {
     }
   };
 
-  //function to navigate to details (wip)
+
   const goToDetails = (item: Account | CreditCard | Asset, type: 'Account' | 'CreditCard' | 'Asset') => {
     if (type === 'Account') {
       navigation.navigate('AccountDetails', { account: item as Account });
     } else if (type === 'CreditCard') {
       navigation.navigate('CreditCardDetails', { card: item as CreditCard }); //to-do make CCdetails page
     }
-    //to-do: implement AssetDetails here
   };
 
   return (

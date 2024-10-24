@@ -11,6 +11,7 @@ import {
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { LineChart } from 'react-native-gifted-charts';
+import { useTheme } from '../themeContext';
 
 const { width } = Dimensions.get('window');
 
@@ -30,8 +31,8 @@ interface Transaction {
 }
 
 const DetailedAccountPage: FC = () => {
-  const colorScheme = useColorScheme();
-  const currentColors = Colors[colorScheme ?? 'light'];
+  const { theme, toggleTheme } = useTheme(); 
+  const currentColors = Colors[theme.dark ? 'dark' : 'light'];
 
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
