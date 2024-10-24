@@ -7,14 +7,18 @@ import {
   StyleSheet,
   Switch,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { FontAwesome } from '@expo/vector-icons';
+import { useAuth } from '@/app/auth/AuthProvider';
+import { router } from 'expo-router';
 
 const SettingsPage: FC = () => {
   const colorScheme = useColorScheme();
   const currentColors = Colors[colorScheme ?? 'light'];
+  const { logout } = useAuth();
 
   //state for toggles
   const [isDarkMode, setIsDarkMode] = useState(colorScheme === 'dark');
@@ -34,6 +38,31 @@ const SettingsPage: FC = () => {
   const toggleBiometrics = () => {
     setBiometricsEnabled((previousState) => !previousState);
     //logic to enable/disable biometrics will be added here
+  };
+
+  const handleLogout = async () => {
+    Alert.alert(
+      "Logout",
+      "Are you sure you want to logout?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Logout",
+          onPress: async () => {
+            try {
+              await logout();
+              router.replace('/login');
+            } catch (error) {
+              console.error('Logout error:', error);
+              Alert.alert('Error', 'Failed to logout. Please try again.');
+            }
+          }
+        }
+      ]
+    );
   };
 
   return (
@@ -126,11 +155,12 @@ const SettingsPage: FC = () => {
             <Text style={[styles.settingText, { color: currentColors.text }]}>Report a Bug</Text>
             <FontAwesome name="angle-right" size={24} color={currentColors.icon} />
           </TouchableOpacity>
-          </View>
+        </View>
 
         {/* Logout Button */}
         <TouchableOpacity
           style={[styles.logoutButton, { backgroundColor: currentColors.accent }]}
+          onPress={handleLogout}
         >
           <Text style={[styles.logoutButtonText, { color: currentColors.background }]}>
             Log Out
@@ -141,7 +171,6 @@ const SettingsPage: FC = () => {
   );
 };
 
-//styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
