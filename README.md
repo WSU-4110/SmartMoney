@@ -37,9 +37,3 @@ npx expo run:android
 
 
 
-
-
-
-
-plaid api - run this in terminal to install plaid dependencies
-npx expo install react-native-plaid-link-sdk
