@@ -3,8 +3,8 @@ import { ThemeProvider as NavigationThemeProvider, DarkTheme, DefaultTheme } fro
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { ThemeProvider } from './themeContext'; // Ensure this path is correct
-import { StatusBar } from 'react-native';
+import { ThemeProvider } from './themeContext'; 
+import { StatusBar } from 'expo-status-bar'; // Correct import
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -29,13 +29,15 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={{ theme, toggleTheme }}>
       <NavigationThemeProvider value={theme}>
-      <StatusBar 
-            barStyle={theme.dark ? 'light-content' : 'dark-content'} 
-          />
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="+not-found" />
-        </Stack>
+        <StatusBar 
+          style={theme.dark ? 'light' : 'dark'} // Use 'light' and 'dark' for expo-status-bar
+        />
+        <SafeAreaProvider>
+            <Stack>
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="+not-found" />
+            </Stack>
+        </SafeAreaProvider>
       </NavigationThemeProvider>
     </ThemeProvider>
   );
