@@ -12,6 +12,8 @@ import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { PieChart } from 'react-native-gifted-charts';
 import { FontAwesome } from '@expo/vector-icons';
+import { useTheme } from '../themeContext';
+
 
 //get device screen dimensions
 const { height, width } = Dimensions.get('window');
@@ -40,8 +42,8 @@ interface Asset {
 }
 
 const Page: FC = () => {
-  const colorScheme = useColorScheme();
-  const currentColors = Colors[colorScheme ?? 'light'];
+  const { theme, toggleTheme } = useTheme(); 
+  const currentColors = Colors[theme.dark ? 'dark' : 'light'];
 
   //expense data for the interactive graph (will be got from api in next sprint)
   const expenseData: ExpenseItem[] = [

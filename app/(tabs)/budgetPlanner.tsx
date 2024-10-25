@@ -20,6 +20,8 @@ import {
   PieChart,
 } from 'react-native-gifted-charts';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../themeContext';
+
 
 //get device screen dimensions
 const { width } = Dimensions.get('window');
@@ -39,8 +41,8 @@ interface Category {
 }
 
 const DataPage: FC = () => {
-  const colorScheme = useColorScheme();
-  const currentColors = Colors[colorScheme ?? 'light'];
+  const { theme, toggleTheme } = useTheme(); 
+  const currentColors = Colors[theme.dark ? 'dark' : 'light'];
 
   //state variables
   const [transactions, setTransactions] = useState<Transaction[]>([]);

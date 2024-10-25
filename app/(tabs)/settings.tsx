@@ -2,7 +2,6 @@ import React, { FC, useState } from 'react';
 import {
   View,
   Text,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Switch,
@@ -10,25 +9,20 @@ import {
   Alert,
 } from 'react-native';
 import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '../themeContext';
 import { FontAwesome } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/app/auth/AuthProvider';
 import { router } from 'expo-router';
 
 const SettingsPage: FC = () => {
-  const colorScheme = useColorScheme();
-  const currentColors = Colors[colorScheme ?? 'light'];
+  const { theme, toggleTheme } = useTheme();
+  const currentColors = Colors[theme.dark ? 'dark' : 'light'];
   const { logout } = useAuth();
 
-  //state for toggles
-  const [isDarkMode, setIsDarkMode] = useState(colorScheme === 'dark');
+  // State for additional toggles
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [biometricsEnabled, setBiometricsEnabled] = useState(false);
-
-  const toggleDarkMode = () => {
-    setIsDarkMode((previousState) => !previousState);
-    //logic to switch the app theme will be added here
-  };
 
   const toggleNotifications = () => {
     setNotificationsEnabled((previousState) => !previousState);
@@ -76,9 +70,9 @@ const SettingsPage: FC = () => {
           <View style={styles.settingItem}>
             <Text style={[styles.settingText, { color: currentColors.text }]}>Dark Mode</Text>
             <Switch
-              value={isDarkMode}
-              onValueChange={toggleDarkMode}
-              thumbColor={isDarkMode ? currentColors.primary : '#f4f3f4'}
+              value={theme.dark}
+              onValueChange={toggleTheme}
+              thumbColor={theme.dark ? currentColors.primary : '#f4f3f4'}
               trackColor={{ false: '#767577', true: currentColors.primary }}
             />
           </View>
@@ -147,7 +141,7 @@ const SettingsPage: FC = () => {
             <Text style={[styles.settingSubText, { color: currentColors.secondary }]}>1.0.0</Text>
           </View>
         </View>
-        
+
         {/* Report a Bug */}
         <View style={styles.sectionContainer}>
           <Text style={[styles.sectionHeader, { color: currentColors.text }]}>Report</Text>
@@ -178,7 +172,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingVertical: 20,
     paddingHorizontal: 20,
-    paddingBottom: 90
+    paddingBottom: 90,
   },
   sectionTitle: {
     fontSize: 28,
