@@ -1,773 +1,149 @@
-//import statements
-import React, { FC, useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Dimensions,
-  TouchableOpacity,
-  TextInput,
-  Modal,
-  Alert,
-} from 'react-native';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
-import {
-  LineChart,
-  BarChart,
-  PieChart,
-} from 'react-native-gifted-charts';
-import { Ionicons } from '@expo/vector-icons';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import * as Progress from 'react-native-progress';
 
-//get device screen dimensions
-const { width } = Dimensions.get('window');
+const BudgetPlanner = () => {
+    const [categories, setCategories] = useState([
+        { name: 'Food', spent: 200.00, budget: 300.00 },
+        { name: 'Housing', spent: 1900.00, budget: 2100.00 },
+        { name: 'Transportation', spent: 250.00, budget: 500.00 },
+        { name: 'Healthcare', spent: 230.00, budget: 250.00 },
+        { name: 'Debt Payment', spent: 1100.00, budget: 1600.00 },
+        { name: 'Entertainment', spent: 25.00, budget: 300.00 },
+        { name: 'Personal', spent: 50.00, budget: 250.00 },
+        { name: 'Utilities', spent: 300.00, budget: 350.00 },
+        { name: 'Donation', spent: 80.00, budget: 100.00 },
+        { name: 'Miscellaneous', spent: 160.00, budget: 200.00 }
+    ]);
+//calculates information at the top of the page
+    const totalBudget = categories.reduce((total, category) => total + category.budget, 0);
+    const totalSpent = categories.reduce((total, category) => total + category.spent, 0);
+    const totalRemaining = totalBudget - totalSpent;
+//this is the progress bar of the budget
+    const renderProgressBar = () => {
+        return categories.map((category) => {
+            const progress = category.spent / category.budget;
+            let color;
+//calculates the percentage of the bar
+            const percent = Math.min(progress * 100, 100).toFixed(0);
 
-//interface definitions
-interface Transaction {
-  id: number;
-  date: string;
-  amount: number;
-  category: string;
-  type: 'Income' | 'Expense';
-}
+            if (progress < 0.71) {
+                color = '#4CAF50'; //green color
+            } else if (progress < 0.91) {
+                color = '#FFEB3B'; // yellow color
+            } else {
+                color = 'red'; //red color
+            }
 
-interface Category {
-  name: string;
-  color: string;
-}
-
-const DataPage: FC = () => {
-  const colorScheme = useColorScheme();
-  const currentColors = Colors[colorScheme ?? 'light'];
-
-  //state variables
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [categories, setCategories] = useState<Category[]>([
-    { name: 'Food', color: currentColors.accent },
-    { name: 'Transport', color: currentColors.secondary },
-    { name: 'Utilities', color: currentColors.primary },
-    { name: 'Entertainment', color: currentColors.icon },
-    { name: 'Healthcare', color: currentColors.tertiary },
-  ]);
-
-  const [modalVisible, setModalVisible] = useState(false);
-  const [newTransaction, setNewTransaction] = useState({
-    date: '',
-    amount: '',
-    category: '',
-    type: 'Expense',
-  });
-
-  //new state for budgets per category
-  const [categoryBudgets, setCategoryBudgets] = useState<{ [key: string]: number }>({
-    Food: 500,
-    Transport: 200,
-    Utilities: 300,
-    Entertainment: 400,
-    Healthcare: 250,
-  });
-
-  //new state for category budget modal
-  const [budgetModalVisible, setBudgetModalVisible] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [newBudget, setNewBudget] = useState<string>('');
-
-  //summary metrics
-  const [totalIncome, setTotalIncome] = useState<number>(0);
-  const [totalExpense, setTotalExpense] = useState<number>(0);
-  const [netBalance, setNetBalance] = useState<number>(0);
-
-  //effect to calculate summaries
-  useEffect(() => {
-    const income = transactions
-      .filter((t) => t.type === 'Income')
-      .reduce((sum, t) => sum + t.amount, 0);
-    const expense = transactions
-      .filter((t) => t.type === 'Expense')
-      .reduce((sum, t) => sum + t.amount, 0);
-    setTotalIncome(income);
-    setTotalExpense(expense);
-    setNetBalance(income - expense);
-  }, [transactions]);
-
-  //handlers
-  const handleAddTransaction = () => {
-    if (
-      newTransaction.date &&
-      newTransaction.amount &&
-      newTransaction.category
-    ) {
-      setTransactions([
-        ...transactions,
-        {
-          id: transactions.length + 1,
-          date: newTransaction.date,
-          amount: parseFloat(newTransaction.amount),
-          category: newTransaction.category,
-          type: newTransaction.type as 'Income' | 'Expense',
-        },
-      ]);
-      setNewTransaction({
-        date: '',
-        amount: '',
-        category: '',
-        type: 'Expense',
-      });
-      setModalVisible(false);
-    } else {
-      Alert.alert('Error', 'Please fill all fields');
-    }
-  };
-
-  const handleSetBudget = () => {
-    if (newBudget && selectedCategory) {
-      setCategoryBudgets({
-        ...categoryBudgets,
-        [selectedCategory]: parseFloat(newBudget),
-      });
-      setNewBudget('');
-      setSelectedCategory('');
-      setBudgetModalVisible(false);
-    } else {
-      Alert.alert('Error', 'Please enter a valid budget');
-    }
-  };
-
-  //assign colors to categories
-  const categoryColors = categories.reduce((acc, cat) => {
-    acc[cat.name] = cat.color;
-    return acc;
-  }, {} as { [key: string]: string });
-
-  //data for charts
-  const expenseData = transactions.filter((t) => t.type === 'Expense');
-  const incomeData = transactions.filter((t) => t.type === 'Income');
-
-  //group expenses by month for line chart
-  const monthlyExpenses = expenseData.reduce((acc, curr) => {
-    const month = curr.date.substr(0, 7); //assuming date format is 'YYYY-MM-DD' (format will change)
-    acc[month] = (acc[month] || 0) + curr.amount;
-    return acc;
-  }, {} as { [key: string]: number });
-
-  const lineChartData = Object.keys(monthlyExpenses).map((month) => ({
-    value: monthlyExpenses[month],
-    label: month.substr(5, 2), //extract month
-  }));
-
-  //group expenses by category for bar and pie charts
-  const categoryExpenses = categories.map((cat) => {
-    const total = expenseData
-      .filter((t) => t.category === cat.name)
-      .reduce((sum, t) => sum + t.amount, 0);
-    return { category: cat.name, amount: total };
-  });
-
-  //budget progress per category
-  const categoryProgress = categoryExpenses.map((item) => {
-    const budget = categoryBudgets[item.category] || 0;
-    const progress = (item.amount / budget) * 100;
-    return {
-      category: item.category,
-      amount: item.amount,
-      budget,
-      progress: progress > 100 ? 100 : progress,
+            return (
+                <View key={category.name} style={styles.category}>
+                    <View style={styles.categoryInfo}>
+                        <Text style={styles.categoryName}>{category.name}</Text>
+                        <Text style={styles.spentText}>
+                            ${category.spent.toFixed(2)} / ${category.budget.toFixed(2)}
+                        </Text>
+                    </View>
+                    <View style={styles.progressContainer}>
+                        <Progress.Bar
+                            progress={progress > 1 ? 1 : progress}
+                            width={null}
+                            color={color}
+                            borderColor="#d3d3d3"
+                            unfilledColor="#f0f0f0"
+                            height={30}
+                            animated={true}
+                        />
+                        <Text style={styles.percentText}>{percent}%</Text>
+                    </View>
+                </View>
+            );
+        });
     };
-  });
-
-  return (
-    <SafeAreaView
-      style={[
-        styles.container,
-        { backgroundColor: currentColors.background },
-      ]}
-    >
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {/* Header */}
-        <Text style={[styles.headerTitle, { color: currentColors.text }]}>
-          Budget Planner
-        </Text>
-
-        {/* Summary Cards */}
-        <View style={styles.summaryContainer}>
-          <View style={[styles.summaryCard, { backgroundColor: currentColors.tertiary }]}>
-            <Text style={[styles.summaryTitle, { color: currentColors.text }]}>
-              Total Income
-            </Text>
-            <Text style={[styles.summaryAmount, { color: currentColors.text }]}>
-              ${totalIncome.toFixed(2)}
-            </Text>
-          </View>
-          <View style={[styles.summaryCard, { backgroundColor: currentColors.tertiary }]}>
-            <Text style={[styles.summaryTitle, { color: currentColors.text }]}>
-              Total Expense
-            </Text>
-            <Text style={[styles.summaryAmount, { color: currentColors.icon }]}>
-              ${totalExpense.toFixed(2)}
-            </Text>
-          </View>
-          <View style={[styles.summaryCard, { backgroundColor: currentColors.tertiary }]}>
-            <Text style={[styles.summaryTitle, { color: currentColors.text }]}>
-              Net Balance
-            </Text>
-            <Text style={[styles.summaryAmount, { color: currentColors.primary }]}>
-              ${netBalance.toFixed(2)}
-            </Text>
-          </View>
-        </View>
-
-        {/* Add Transaction and Set Budget Buttons */}
-        <View style={styles.buttonsContainer}>
-          <TouchableOpacity
-            style={[styles.addButton, { backgroundColor: currentColors.secondary }]}
-            onPress={() => setModalVisible(true)}
-          >
-            <Ionicons name="add-circle-outline" size={24} color={currentColors.text} />
-            <Text style={[styles.addButtonText, { color: currentColors.text }]}>Add Transaction</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.addButton, { backgroundColor: currentColors.accent }]}
-            onPress={() => setBudgetModalVisible(true)}
-          >
-            <Ionicons name="settings-outline" size={24} color={currentColors.text} />
-            <Text style={[styles.addButtonText, { color: currentColors.text }]}>Set Budgets</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Line Chart for Monthly Spending */}
-        <View style={styles.chartContainer}>
-          <Text style={[styles.chartTitle, { color: currentColors.text }]}>
-            Monthly Expense Trend
-          </Text>
-          <LineChart
-            data={lineChartData}
-            width={width - 40}
-            height={220}
-            isAnimated
-            spacing={20}
-            initialSpacing={10}
-            color={currentColors.primary}
-            hideDataPoints
-            thickness={2}
-            yAxisTextStyle={{ color: currentColors.text }}
-            xAxisLabelTextStyle={{ color: currentColors.text }}
-            yAxisOffset={10}
-            noOfSections={4}
-            maxValue={Math.max(...lineChartData.map((d) => d.value)) + 100}
-            areaChart
-            startFillColor={currentColors.primary}
-            endFillColor={currentColors.background}
-            startOpacity={0.3}
-            endOpacity={0}
-          />
-        </View>
-
-        {/* Bar Chart for Spending by Category with Budget */}
-        <View style={styles.chartContainer}>
-          <Text style={[styles.chartTitle, { color: currentColors.text }]}>
-            Spending vs Budget by Category
-          </Text>
-          <BarChart
-            data={categoryProgress.map((item) => ({
-              value: item.amount,
-              label: item.category,
-              frontColor: categoryColors[item.category] || currentColors.accent,
-              topLabelComponent: () => (
-                <Text style={{ color: currentColors.text, fontSize: 12 }}>
-                  ${item.amount.toFixed(0)}
-                </Text>
-              ),
-            }))}
-            width={width - 40}
-            height={220}
-            barWidth={30}
-            spacing={30}
-            initialSpacing={15}
-            yAxisLabelPrefix="$"
-            xAxisLabelTextStyle={{ color: currentColors.text }}
-            yAxisTextStyle={{ color: currentColors.text }}
-            yAxisOffset={10}
-            noOfSections={4}
-            maxValue={Math.max(...categoryProgress.map((d) => d.budget)) + 100}
-            
-          />
-        </View>
-
-        {/* Pie Chart for Expense Distribution */}
-        <View style={styles.chartContainer}>
-          <Text style={[styles.chartTitle, { color: currentColors.text }]}>
-            Expense Distribution
-          </Text>
-          <PieChart
-            data={categoryExpenses.map((item) => ({
-              value: item.amount,
-              color: categoryColors[item.category] || currentColors.accent,
-              text: item.category,
-            }))}
-            donut
-            radius={120}
-            innerRadius={70}
-            innerCircleColor={currentColors.background}
-            centerLabelComponent={() => (
-              <View style={styles.centerLabel}>
-                <Text
-                  style={[styles.centerLabelAmount, { color: currentColors.text }]}
-                >
-                  Total
-                </Text>
-                <Text
-                  style={[styles.centerLabelText, { color: currentColors.text }]}
-                >
-                  ${totalExpense.toFixed(2)}
-                </Text>
-              </View>
-            )}
-          />
-          {/* Legend */}
-          <View style={styles.legendContainer}>
-            {categoryExpenses.map((item, index) => (
-              <View key={index} style={styles.legendItem}>
-                <View
-                  style={[
-                    styles.legendColorBox,
-                    {
-                      backgroundColor:
-                        categoryColors[item.category] || currentColors.accent,
-                    },
-                  ]}
-                />
-                <Text
-                  style={[styles.legendText, { color: currentColors.text }]}
-                >
-                  {item.category}
-                </Text>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        {/* Transaction List */}
-        <View style={styles.transactionContainer}>
-          <Text style={[styles.sectionTitle, { color: currentColors.text }]}>
-            Recent Transactions
-          </Text>
-          {transactions.slice(-5).reverse().map((item) => (
-            <View key={item.id} style={styles.transactionItem}>
-              <View>
-                <Text
-                  style={[styles.transactionCategory, { color: currentColors.text }]}
-                >
-                  {item.category}
-                </Text>
-                <Text
-                  style={[styles.transactionDate, { color: currentColors.icon }]}
-                >
-                  {item.date}
-                </Text>
-              </View>
-              <Text
-                style={[
-                  styles.transactionAmount,
-                  {
-                    color:
-                      item.type === 'Income' ? currentColors.accent : currentColors.icon,
-                  },
-                ]}
-              >
-                {item.type === 'Income' ? '+' : '-'}${item.amount.toFixed(2)}
-              </Text>
+//this part is the banner at the top of the page
+    return (
+        <View style={styles.container}>
+            <View style={styles.budgetSummaryContainer}>
+                <Text style={styles.totalBudgetText}>Total Budget: ${totalBudget.toFixed(2)}</Text>
+                <Text style={styles.totalExpensesText}>Total Expenses: ${totalSpent.toFixed(2)}</Text>
+                <Text style={styles.remainingBudgetText}>Budget Remaining: ${totalRemaining.toFixed(2)}</Text>
             </View>
-          ))}
+
+            <ScrollView style={styles.scrollView}>
+                {renderProgressBar()}
+            </ScrollView>
         </View>
-
-        {/* Modal for Adding Transactions */}
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={modalVisible}
-          onRequestClose={() => {
-            setModalVisible(!modalVisible);
-          }}
-        >
-          <View style={styles.modalOverlay}>
-            <View
-              style={[
-                styles.modalView,
-                { backgroundColor: currentColors.background },
-              ]}
-            >
-              <Text style={[styles.modalTitle, { color: currentColors.text }]}>
-                Add Transaction
-              </Text>
-              <TextInput
-                style={[
-                  styles.input,
-                  { borderColor: currentColors.icon, color: currentColors.text },
-                ]}
-                placeholder="Date (YYYY-MM-DD)"
-                placeholderTextColor={currentColors.icon}
-                onChangeText={(text) =>
-                  setNewTransaction({ ...newTransaction, date: text })
-                }
-                value={newTransaction.date}
-              />
-              <TextInput
-                style={[
-                  styles.input,
-                  { borderColor: currentColors.icon, color: currentColors.text },
-                ]}
-                placeholder="Amount"
-                placeholderTextColor={currentColors.icon}
-                keyboardType="numeric"
-                onChangeText={(text) =>
-                  setNewTransaction({ ...newTransaction, amount: text })
-                }
-                value={newTransaction.amount}
-              />
-              <TextInput
-                style={[
-                  styles.input,
-                  { borderColor: currentColors.icon, color: currentColors.text },
-                ]}
-                placeholder="Category"
-                placeholderTextColor={currentColors.icon}
-                onChangeText={(text) =>
-                  setNewTransaction({ ...newTransaction, category: text })
-                }
-                value={newTransaction.category}
-              />
-              <View style={styles.typeSwitch}>
-                <TouchableOpacity
-                  style={[
-                    styles.typeButton, {backgroundColor: currentColors.tertiary},
-                    newTransaction.type === 'Expense' && {
-                      backgroundColor: currentColors.primary,
-                    },
-                  ]}
-                  onPress={() =>
-                    setNewTransaction({ ...newTransaction, type: 'Expense' })
-                  }
-                >
-                  <Text style={styles.typeButtonText}>Expense</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.typeButton, {backgroundColor: currentColors.tertiary},
-                    newTransaction.type === 'Income' && {
-                      backgroundColor: currentColors.primary,
-                    },
-                  ]}
-                  onPress={() =>
-                    setNewTransaction({ ...newTransaction, type: 'Income' })
-                  }
-                >
-                  <Text style={styles.typeButtonText}>Income</Text>
-                </TouchableOpacity>
-              </View>
-              <View style={styles.modalButtons}>
-                <TouchableOpacity
-                  style={[
-                    styles.modalButton,
-                    { backgroundColor: currentColors.accent },
-                  ]}
-                  onPress={handleAddTransaction}
-                >
-                  <Text style={styles.modalButtonText}>Add</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.modalButton,
-                    { backgroundColor: currentColors.icon },
-                  ]}
-                  onPress={() => setModalVisible(false)}
-                >
-                  <Text style={styles.modalButtonText}>Cancel</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
-
-        {/* Modal for Setting Budgets */}
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={budgetModalVisible}
-          onRequestClose={() => {
-            setBudgetModalVisible(!budgetModalVisible);
-          }}
-        >
-          <View style={styles.modalOverlay}>
-            <View
-              style={[
-                styles.modalView,
-                { backgroundColor: currentColors.background },
-              ]}
-            >
-              <Text style={[styles.modalTitle, { color: currentColors.text }]}>
-                Set Budget
-              </Text>
-              <Text style={[styles.modalSubtitle, { color: currentColors.text }]}>
-                Select Category
-              </Text>
-              <View style={styles.categoryList}>
-                {categories.map((cat, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={[
-                      styles.categoryItem,{ backgroundColor: currentColors.tertiary},
-                      selectedCategory === cat.name && {
-                        backgroundColor: currentColors.accent,
-                      },
-                    ]}
-                    onPress={() => setSelectedCategory(cat.name)}
-                  >
-                    <Text style={[styles.categoryItemText, { color: currentColors.text }]}>
-                      {cat.name}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-              <TextInput
-                style={[
-                  styles.input,
-                  { borderColor: currentColors.icon, color: currentColors.text },
-                ]}
-                placeholder="Budget Amount"
-                placeholderTextColor={currentColors.icon}
-                keyboardType="numeric"
-                onChangeText={(text) => setNewBudget(text)}
-                value={newBudget}
-              />
-              <View style={styles.modalButtons}>
-                <TouchableOpacity
-                  style={[
-                    styles.modalButton,
-                    { backgroundColor: currentColors.primary },
-                  ]}
-                  onPress={handleSetBudget}
-                >
-                  <Text style={styles.modalButtonText}>Set Budget</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.modalButton,
-                    { backgroundColor: currentColors.icon },
-                  ]}
-                  onPress={() => setBudgetModalVisible(false)}
-                >
-                  <Text style={styles.modalButtonText}>Cancel</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
-
-      </ScrollView>
-    </SafeAreaView>
-  );
+    );
 };
 
-//styles
+
+//this part edits the layout of the page
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-  },
-  headerTitle: {
-    fontSize: 32,
-    fontWeight: '800',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  summaryContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  summaryCard: {
-    flex: 1,
-    padding: 15,
-    marginHorizontal: 5,
-    borderRadius: 12,
-    elevation: 2,
-  },
-  summaryTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  summaryAmount: {
-    fontSize: 22,
-    fontWeight: '700',
-    marginTop: 10,
-  },
-  buttonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  addButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    borderRadius: 25,
-    marginHorizontal: 5,
-  },
-  addButtonText: {
-    fontSize: 16,
-    marginLeft: 8,
-  },
-  chartContainer: {
-    marginBottom: 30,
-    alignItems: 'center',
-  },
-  chartTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 15,
-    alignSelf: 'flex-start',
-  },
-  centerLabel: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  centerLabelAmount: {
-    fontSize: 20,
-    fontWeight: '600',
-  },
-  centerLabelText: {
-    fontSize: 16,
-    color: '#666',
-  },
-  legendContainer: {
-    marginTop: 20,
-    alignItems: 'flex-start',
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 5,
-  },
-  legendColorBox: {
-    width: 15,
-    height: 15,
-    marginRight: 10,
-  },
-  legendText: {
-    fontSize: 16,
-  },
-  transactionContainer: {
-    marginBottom: 30,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 15,
-  },
-  transactionItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 15,
-    borderBottomColor: '#ccc',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  transactionCategory: {
-    fontSize: 16,
-  },
-  transactionDate: {
-    fontSize: 12,
-    color: '#666',
-  },
-  transactionAmount: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    backgroundColor: '#00000099',
-  },
-  modalView: {
-    margin: 20,
-    borderRadius: 8,
-    padding: 20,
-    elevation: 5,
-  },
-  modalTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    marginBottom: 15,
-    textAlign: 'center',
-  },
-  modalSubtitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  input: {
-    height: 45,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    marginBottom: 15,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-  },
-  typeSwitch: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 15,
-  },
-  typeButton: {
-    flex: 1,
-    padding: 12,
-    borderRadius: 25,
-    alignItems: 'center',
-    marginHorizontal: 5,
-    backgroundColor: '#ccc',
-  },
-  typeButtonText: {
-    color: '#fff',
-    fontSize: 16,
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  modalButton: {
-    flex: 1,
-    padding: 12,
-    borderRadius: 25,
-    alignItems: 'center',
-    marginHorizontal: 5,
-  },
-  modalButtonText: {
-    color: '#fff',
-    fontSize: 16,
-  },
-  categoryList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 15,
-  },
-  categoryItem: {
-    padding: 10,
-    borderRadius: 8,
-    margin: 5,
-    backgroundColor: '#ccc',
-  },
-  categoryItemText: {
-    fontSize: 16,
-  },
+    container: {
+        flex: 1,
+        padding: 20,
+        backgroundColor: '#fff',
+    },
+    budgetSummaryContainer: {
+        marginBottom: 20,
+        padding: 15,
+        backgroundColor: '#e0f7fa',
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#b2ebf2',
+        alignItems: 'center',
+    },
+    totalBudgetText: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#00796b',
+        marginBottom: 5,
+    },
+    totalExpensesText: {
+        fontSize: 16,
+        color: '#d32f2f',
+        marginBottom: 5,
+    },
+    remainingBudgetText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#388e3c',
+    },
+    scrollView: {
+        flex: 1,
+    },
+    category: {
+        marginBottom: 20,
+        padding: 10,
+        backgroundColor: '#f9f9f9',
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#ddd',
+    },
+    categoryInfo: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 10,
+    },
+    categoryName: {
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    spentText: {
+        fontSize: 16,
+        color: '#333',
+    },
+    progressContainer: {
+        position: 'relative',
+        marginTop: 10,
+    },
+    percentText: {
+        position: 'absolute',
+        left: '50%',
+        top: 2,
+        transform: [{ translateX: -50 }],
+        fontWeight: 'bold',
+        color: '#fff',
+    },
 });
 
-export default DataPage;
+export default BudgetPlanner;
