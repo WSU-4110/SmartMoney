@@ -1,19 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import { ThemeProvider as NavigationThemeProvider, DarkTheme, DefaultTheme } from '@react-navigation/native';
+import React, { useEffect } from 'react';
+import { ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { ThemeProvider } from './themeContext';
+import { ThemeProvider, usePersistedTheme } from './themeContext';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 import { AuthProvider } from './auth/AuthProvider';
 import { useAuthProtection } from '@/hooks/useAuthProtection';
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
-// Auth protection wrapper component
 function AuthCheck({ children }: { children: React.ReactNode }) {
   useAuthProtection();
   return <>{children}</>;
@@ -24,11 +22,7 @@ export default function RootLayout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
-  const [theme, setTheme] = useState(DefaultTheme);
-
-  const toggleTheme = () => {
-    setTheme((prevTheme) => (prevTheme.dark ? DefaultTheme : DarkTheme));
-  };
+  const { theme, toggleTheme } = usePersistedTheme();
 
   useEffect(() => {
     if (loaded) {
@@ -37,7 +31,7 @@ export default function RootLayout() {
   }, [loaded]);
 
   if (!loaded) {
-    return null; // Prevent rendering until fonts are loaded
+    return null;
   }
 
   return (
