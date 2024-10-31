@@ -1,5 +1,7 @@
+
+
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, Button } from 'react-native';
 import * as Progress from 'react-native-progress';
 
 const BudgetPlanner = () => {
@@ -15,22 +17,31 @@ const BudgetPlanner = () => {
         { name: 'Donation', spent: 80.00, budget: 100.00 },
         { name: 'Miscellaneous', spent: 160.00, budget: 200.00 }
     ]);
+
+    const [modalVisible, setModalVisible] = useState(false);
+    const [newBudgets, setNewBudgets] = useState(
+        categories.map(category => ({ name: category.name, budget: category.budget }))
+    );
 //calculates information at the top of the page
+
     const totalBudget = categories.reduce((total, category) => total + category.budget, 0);
     const totalSpent = categories.reduce((total, category) => total + category.spent, 0);
     const totalRemaining = totalBudget - totalSpent;
 //this is the progress bar of the budget
+
     const renderProgressBar = () => {
-        return categories.map((category) => {
+        return categories.map((category, index) => {
             const progress = category.spent / category.budget;
             let color;
-//calculates the percentage of the bar
-            const percent = Math.min(progress * 100, 100).toFixed(0);
+
+            //calculates the percentage of the bar
+
+            const percentSpent = Math.min(progress * 100, 100).toFixed(0);
 
             if (progress < 0.71) {
                 color = '#4CAF50'; //green color
             } else if (progress < 0.91) {
-                color = '#FFEB3B'; // yellow color
+                color = '#FFEB3B'; //yellow color
             } else {
                 color = 'red'; //red color
             }
@@ -53,11 +64,20 @@ const BudgetPlanner = () => {
                             height={30}
                             animated={true}
                         />
-                        <Text style={styles.percentText}>{percent}%</Text>
+                        <Text style={styles.percentText}>{percentSpent}%</Text>
                     </View>
                 </View>
             );
         });
+    };
+
+    const saveBudgets = () => {
+        const updatedCategories = categories.map((category, index) => ({
+            ...category,
+            budget: newBudgets[index].budget,
+        }));
+        setCategories(updatedCategories);
+        setModalVisible(false);
     };
 //this part is the banner at the top of the page
     return (
@@ -68,15 +88,51 @@ const BudgetPlanner = () => {
                 <Text style={styles.remainingBudgetText}>Budget Remaining: ${totalRemaining.toFixed(2)}</Text>
             </View>
 
+            <View style={styles.buttonContainer}>
+                <TouchableOpacity style={styles.button} onPress={() => setModalVisible(true)}>
+                    <Text style={styles.buttonText}>Change Budget</Text>
+                </TouchableOpacity>
+            </View>
+
             <ScrollView style={styles.scrollView}>
                 {renderProgressBar()}
             </ScrollView>
+
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={modalVisible}
+                onRequestClose={() => setModalVisible(false)}>
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Update Budgets</Text>
+                        {newBudgets.map((category, index) => (
+                            <View key={category.name} style={styles.inputContainer}>
+                                <Text>{category.name}</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    keyboardType="numeric"
+                                    defaultValue={category.budget.toString()}
+                                    onChangeText={value => {
+                                        setNewBudgets(prevBudgets => {
+                                            const updatedBudgets = [...prevBudgets];
+                                            updatedBudgets[index].budget = parseFloat(value) || 0; 
+                                            return updatedBudgets;
+                                        });
+                                    }}
+                                />
+                            </View>
+                        ))}
+                        <Button title="Save" onPress={saveBudgets} />
+                        <Button title="Cancel" onPress={() => setModalVisible(false)} />
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 };
-
-
 //this part edits the layout of the page
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -132,6 +188,25 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#333',
     },
+    buttonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingVertical: 10,
+        marginBottom: 10,
+    },
+    button: {
+        flex: 1,
+        marginHorizontal: 5,
+        paddingVertical: 15,
+        backgroundColor: '#4CAF50',
+        borderRadius: 5,
+        alignItems: 'center',
+    },
+    buttonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
     progressContainer: {
         position: 'relative',
         marginTop: 10,
@@ -144,6 +219,40 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#fff',
     },
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContent: {
+        width: '80%',
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        padding: 20,
+        alignItems: 'center',
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 20,
+    },
+    inputContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
+        marginBottom: 10,
+    },
+    input: {
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 5,
+        padding: 10,
+        width: '60%',
+    },
 });
 
 export default BudgetPlanner;
+
+
+
