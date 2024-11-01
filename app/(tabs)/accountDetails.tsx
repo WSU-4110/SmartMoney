@@ -29,24 +29,28 @@ interface Transaction {
   type: 'debit' | 'credit';
 }
 
-const DetailedAccountPage: FC = () => {
-  const colorScheme = useColorScheme();
-  const currentColors = Colors[colorScheme ?? 'light'];
+class AccountRepository {
+  private static instance: AccountRepository;
+  private accounts: Account[] = [];
 
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+  public static getAccountRespository(): AccountRepository {
+    if (!AccountRepository.instance) {
+      AccountRepository.instance = new AccountRepository();
+    }
+    return AccountRepository.instance;
+  }
 
-  useEffect(() => {
-    const fetchAccounts = async () => {
-      const accountData: Account[] = [
+  public async fetchAccounts(): Promise<Account[]> {
+    if (this.accounts.length == 0) {
+      this.accounts = [
         {
           id: 1,
           name: 'Checking Account',
           balance: 2500,
           transactions: [
-            { id: 1, date: '2023-10-01', description: 'Grocery Store', amount: -50, type: 'debit' },
-            { id: 2, date: '2023-10-02', description: 'Salary', amount: 3000, type: 'credit' },
-            { id: 3, date: '2023-10-03', description: 'Electricity Bill', amount: -100, type: 'debit' },
+            { id: 1, date: '10-01-2023', description: 'Grocery Store', amount: -50, type: 'debit' },
+            { id: 2, date: '10-02-2023', description: 'Salary', amount: 5000, type: 'credit' },
+            { id: 3, date: '10-03-2023', description: 'Electricity Bill', amount: -100, type: 'debit' },
           ],
         },
         {
@@ -54,16 +58,38 @@ const DetailedAccountPage: FC = () => {
           name: 'Savings Account',
           balance: 10000,
           transactions: [
-            { id: 4, date: '2023-09-15', description: 'Interest', amount: 50, type: 'credit' },
+            { id: 4, date: '9-15-2023', description: 'Interest', amount: 50, type: 'credit' },
           ],
         },
       ];
+    }
+    return this.accounts;
+  }
 
+  public getAccountById(id: number): Account | null {
+    return this.accounts.find(account => account.id === id) || null;
+  }
+}
+
+const DetailedAccountPage: FC = () => {
+  const colorScheme = useColorScheme();
+  const currentColors = Colors[colorScheme ?? 'light'];
+
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+
+  
+  
+  
+  useEffect(() => {
+    const fetchData = async () => {
+      const repository = AccountRepository.getAccountRespository();
+      const accountData = await repository.fetchAccounts();
       setAccounts(accountData);
       setSelectedAccount(accountData[0]);
     };
 
-    fetchAccounts();
+    fetchData();
   }, []);
 
   return (
