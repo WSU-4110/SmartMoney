@@ -17,6 +17,9 @@ import { FontAwesome } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import api from '@/api/apiClient';
+import { open } from 'react-native-plaid-link-sdk';
+import { createTokenPlaidLink, createLinkOpenProps } from '../plaid/Link';
 
 //type definitions
 interface Account {
@@ -61,6 +64,7 @@ const AccountsPage = () => {
 
   //state for modal visibility and type
   const [modalVisible, setModalVisible] = useState(false);
+  const [selectAddTypeModalVisible, setSelectAddTypeModalVisible] = useState(false);
   const [modalType, setModalType] = useState<'Account' | 'CreditCard' | 'Asset'>('Account');
   const [isEditing, setIsEditing] = useState(false);
   const [editingItemId, setEditingItemId] = useState<number | null>(null);
@@ -294,14 +298,63 @@ const AccountsPage = () => {
           <TouchableOpacity
             style={[styles.addButton, { backgroundColor: currentColors.primary }]}
             onPress={() => {
-              setModalType('Account');
-              setIsEditing(false);
-              setModalVisible(true);
+              createTokenPlaidLink();
+              setSelectAddTypeModalVisible(true);
             }}
           >
             <Text style={[styles.addButtonText, { color: currentColors.background }]}>Add Account</Text>
           </TouchableOpacity>
         </View>
+
+        {/* New Modal for Choosing between Bank or Credit Card */}
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={selectAddTypeModalVisible}
+          onRequestClose={() => {
+            setSelectAddTypeModalVisible(false);
+          }}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalContainer, { backgroundColor: currentColors.background }]}>
+              <Text style={[styles.modalTitle, { color: currentColors.text }]}>Choose Type to Add</Text>
+              <TouchableOpacity
+                style={[styles.modalButton, { backgroundColor: currentColors.primary }]}
+                onPress={() => {
+                  open(createLinkOpenProps());
+                  //setModalType('Account');
+                  //setIsEditing(false);
+                  //setSelectAddTypeModalVisible(false);
+                  //setModalVisible(true);
+                }}
+              >
+                <Text style={[styles.modalButtonText, { color: currentColors.background }]}>Add Bank</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalButton, { backgroundColor: currentColors.primary }]}
+                onPress={() => {
+                  setModalType('CreditCard');
+                  setIsEditing(false);
+                  setSelectAddTypeModalVisible(false);
+                  setModalVisible(true);
+                }}
+              >
+                <Text style={[styles.modalButtonText, { color: currentColors.background }]}>Add Credit Card</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalButton, { backgroundColor: currentColors.accent }]}
+                onPress={() => {
+                  setSelectAddTypeModalVisible(false);
+                }}
+              >
+                <Text style={[styles.modalButtonText, { color: currentColors.background }]}>Cancel</Text>
+              </TouchableOpacity>
+
+            </View>
+          </View>
+        </Modal>
 
         {/* Credit Cards Section */}
         <View style={styles.sectionContainer}>
@@ -334,9 +387,7 @@ const AccountsPage = () => {
           <TouchableOpacity
             style={[styles.addButton, { backgroundColor: currentColors.primary }]}
             onPress={() => {
-              setModalType('CreditCard');
-              setIsEditing(false);
-              setModalVisible(true);
+              
             }}
           >
             <Text style={[styles.addButtonText, { color: currentColors.background }]}>Add Credit Card</Text>

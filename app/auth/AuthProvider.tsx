@@ -3,6 +3,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { makeRedirectUri, useAuthRequest } from 'expo-auth-session';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
+import api from '../../api/apiClient';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -96,6 +97,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const userInfo = await response.json();
       setUser(userInfo);
       await AsyncStorage.setItem('user', JSON.stringify(userInfo));
+
+      try {
+        const serverResponse = await api.post('/user/auth', {
+          email: userInfo.email,
+          name: userInfo.name,
+        });
+        console.log('Server response:', serverResponse.data);
+        return serverResponse.data;
+      } catch (error: any) {
+        console.error('API call failed:', error.message);
+      }
+
     } catch (error) {
       console.error('Error getting user info:', error);
       Alert.alert('Error', 'Failed to get user information. Please try again.');
