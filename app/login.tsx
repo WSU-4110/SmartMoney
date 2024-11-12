@@ -12,11 +12,13 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { FontAwesome } from '@expo/vector-icons';
 import { useAuth } from '@/app/auth/AuthProvider';
 import { router } from 'expo-router';
+import { useTheme } from './themeContext';
+
 
 export default function LoginScreen(): JSX.Element {
   const { login } = useAuth();
-  const colorScheme = useColorScheme();
-  const currentColors = Colors[colorScheme ?? 'light'];
+  const { theme, toggleTheme } = useTheme(); 
+  const currentColors = Colors[theme.dark ? 'dark' : 'light'];
 
   const handleLogin = async () => {
     await login();

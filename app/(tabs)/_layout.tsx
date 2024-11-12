@@ -7,14 +7,16 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { FontAwesome } from '@expo/vector-icons';
 
+import { useTheme } from '../themeContext';
+
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const { theme } = useTheme();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarStyle:{
-          backgroundColor: colorScheme === 'dark' ? Colors.dark.background : Colors.light.background,
+        tabBarStyle: {
+          backgroundColor: theme.dark ? Colors.dark.background : Colors.light.background,
           position: 'absolute',
           bottom: 40,
           justifyContent: 'center',
@@ -27,16 +29,15 @@ export default function TabLayout() {
           paddingVertical: 8,
           borderWidth: 1,
           borderTopWidth: 1,
-          borderColor: colorScheme === 'dark' ? Colors.light.primary : Colors.light.primary,
-          borderTopColor: colorScheme === 'dark' ? Colors.light.primary : Colors.light.primary,
+          borderColor: theme.dark ? Colors.light.primary : Colors.light.primary,
+          borderTopColor: theme.dark ? Colors.light.primary : Colors.light.primary,
         },
-
         tabBarShowLabel: false,
-        tabBarInactiveTintColor: Colors[colorScheme ?? 'light'].tabIconDefault,
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarInactiveTintColor: Colors[theme.dark ? 'dark' : 'light'].tabIconDefault,
+        tabBarActiveTintColor: Colors[theme.dark ? 'dark' : 'light'].tint,
         headerShown: false,
-      }}>
-
+      }}
+    >
       <Tabs.Screen
         name="accounts"
         options={{
@@ -61,7 +62,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color, size, focused }) => (
+          tabBarIcon: ({ color, focused }) => (
             <TabBarIcon name={focused ? 'home' : 'home-outline'} size={30} color={color} />
           ),
         }}
@@ -86,7 +87,6 @@ export default function TabLayout() {
           ),
         }}
       />
-
     </Tabs>
   );
 }
