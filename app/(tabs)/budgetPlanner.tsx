@@ -1,27 +1,168 @@
-
-
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, Button } from 'react-native';
 import * as Progress from 'react-native-progress';
+import { Picker } from '@react-native-picker/picker';
+import { Colors } from '@/constants/Colors';
+
+
+//The builder design pattern was used 
+
+//This is the budget class
+class Budget {
+    name: string;
+    spent: number;
+    budget: number;
+
+    constructor(name: string, spent: number, budget: number) {
+        this.name = name;
+        this.spent = spent;
+        this.budget = budget;
+    }
+}
+
+// This is the Builder Abstract class 
+abstract class BudgetBuilder {
+    protected name: string = "";
+    protected spent: number = 0;
+    protected budget: number = 0;
+
+    setSpent(spent: number): BudgetBuilder {
+        this.spent = spent;
+        return this;
+    }
+
+    setBudget(budget: number): BudgetBuilder {
+        this.budget = budget;
+        return this;
+    }
+
+    abstract build(): Budget;
+}
+
+// These are the specific builders for each type of budget
+class FoodBudgetBuilder extends BudgetBuilder {
+    constructor() {
+        super();
+        this.name = "Food";
+    }
+    build(): Budget {
+        return new Budget(this.name, this.spent, this.budget);
+    }
+}
+
+class HousingBudgetBuilder extends BudgetBuilder {
+    constructor() {
+        super();
+        this.name = "Housing";
+    }
+    build(): Budget {
+        return new Budget(this.name, this.spent, this.budget);
+    }
+}
+
+class TransportationBudgetBuilder extends BudgetBuilder {
+    constructor() {
+        super();
+        this.name = "Transportation";
+    }
+    build(): Budget {
+        return new Budget(this.name, this.spent, this.budget);
+    }
+}
+
+class HealthcareBudgetBuilder extends BudgetBuilder {
+    constructor() {
+        super();
+        this.name = "Healthcare";
+    }
+    build(): Budget {
+        return new Budget(this.name, this.spent, this.budget);
+    }
+}
+
+class DebtPaymentBudgetBuilder extends BudgetBuilder {
+    constructor() {
+        super();
+        this.name = "Debt Payment";
+    }
+    build(): Budget {
+        return new Budget(this.name, this.spent, this.budget);
+    }
+}
+
+class EntertainmentBudgetBuilder extends BudgetBuilder {
+    constructor() {
+        super();
+        this.name = "Entertainment";
+    }
+    build(): Budget {
+        return new Budget(this.name, this.spent, this.budget);
+    }
+}
+
+class PersonalBudgetBuilder extends BudgetBuilder {
+    constructor() {
+        super();
+        this.name = "Personal";
+    }
+    build(): Budget {
+        return new Budget(this.name, this.spent, this.budget);
+    }
+}
+
+class UtilitiesBudgetBuilder extends BudgetBuilder {
+    constructor() {
+        super();
+        this.name = "Utilities";
+    }
+    build(): Budget {
+        return new Budget(this.name, this.spent, this.budget);
+    }
+}
+
+class DonationBudgetBuilder extends BudgetBuilder {
+    constructor() {
+        super();
+        this.name = "Donation";
+    }
+    build(): Budget {
+        return new Budget(this.name, this.spent, this.budget);
+    }
+}
+
+class MiscellaneousBudgetBuilder extends BudgetBuilder {
+    constructor() {
+        super();
+        this.name = "Miscellaneous";
+    }
+    build(): Budget {
+        return new Budget(this.name, this.spent, this.budget);
+    }
+}
 
 const BudgetPlanner = () => {
-    const [categories, setCategories] = useState([
-        { name: 'Food', spent: 200.00, budget: 300.00 },
-        { name: 'Housing', spent: 1900.00, budget: 2100.00 },
-        { name: 'Transportation', spent: 250.00, budget: 500.00 },
-        { name: 'Healthcare', spent: 230.00, budget: 250.00 },
-        { name: 'Debt Payment', spent: 1100.00, budget: 1600.00 },
-        { name: 'Entertainment', spent: 25.00, budget: 300.00 },
-        { name: 'Personal', spent: 50.00, budget: 250.00 },
-        { name: 'Utilities', spent: 300.00, budget: 350.00 },
-        { name: 'Donation', spent: 80.00, budget: 100.00 },
-        { name: 'Miscellaneous', spent: 160.00, budget: 200.00 }
-    ]);
+    const initialCategories = [
+        new FoodBudgetBuilder().setSpent(200).setBudget(300).build(),
+        new HousingBudgetBuilder().setSpent(1900).setBudget(2100).build(),
+        new TransportationBudgetBuilder().setSpent(250).setBudget(500).build(),
+        new HealthcareBudgetBuilder().setSpent(230).setBudget(250).build(),
+        new DebtPaymentBudgetBuilder().setSpent(1100).setBudget(1600).build(),
+        new EntertainmentBudgetBuilder().setSpent(25).setBudget(300).build(),
+        new PersonalBudgetBuilder().setSpent(50).setBudget(250).build(),
+        new UtilitiesBudgetBuilder().setSpent(300).setBudget(350).build(),
+        new DonationBudgetBuilder().setSpent(80).setBudget(100).build(),
+        new MiscellaneousBudgetBuilder().setSpent(160).setBudget(200).build()
+    ];
 
+    const [categories, setCategories] = useState<Budget[]>(initialCategories);
     const [modalVisible, setModalVisible] = useState(false);
+    const [expenseModalVisible, setExpenseModalVisible] = useState(false);
     const [newBudgets, setNewBudgets] = useState(
         categories.map(category => ({ name: category.name, budget: category.budget }))
     );
+
+    const [selectedCategory, setSelectedCategory] = useState(categories[0]?.name || "");
+    const [expenseAmount, setExpenseAmount] = useState("");
 //calculates information at the top of the page
 
     const totalBudget = categories.reduce((total, category) => total + category.budget, 0);
@@ -33,7 +174,6 @@ const BudgetPlanner = () => {
         return categories.map((category, index) => {
             const progress = category.spent / category.budget;
             let color;
-
             //calculates the percentage of the bar
 
             const percentSpent = Math.min(progress * 100, 100).toFixed(0);
@@ -79,7 +219,21 @@ const BudgetPlanner = () => {
         setCategories(updatedCategories);
         setModalVisible(false);
     };
+
+    const addExpense = () => {
+        const updatedCategories = categories.map(category => {
+            if (category.name === selectedCategory) {
+                return { ...category, spent: category.spent + parseFloat(expenseAmount) };
+            }
+            return category;
+        });
+        setCategories(updatedCategories);
+        setExpenseModalVisible(false);
+        setExpenseAmount("");
+    };
+
 //this part is the banner at the top of the page
+
     return (
         <View style={styles.container}>
             <View style={styles.budgetSummaryContainer}>
@@ -91,6 +245,9 @@ const BudgetPlanner = () => {
             <View style={styles.buttonContainer}>
                 <TouchableOpacity style={styles.button} onPress={() => setModalVisible(true)}>
                     <Text style={styles.buttonText}>Change Budget</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.button} onPress={() => setExpenseModalVisible(true)}>
+                    <Text style={styles.buttonText}>Add Expense</Text>
                 </TouchableOpacity>
             </View>
 
@@ -114,6 +271,7 @@ const BudgetPlanner = () => {
                                     keyboardType="numeric"
                                     defaultValue={category.budget.toString()}
                                     onChangeText={value => {
+                                        
                                         setNewBudgets(prevBudgets => {
                                             const updatedBudgets = [...prevBudgets];
                                             updatedBudgets[index].budget = parseFloat(value) || 0; 
@@ -123,11 +281,42 @@ const BudgetPlanner = () => {
                                 />
                             </View>
                         ))}
-                        <Button title="Save" onPress={saveBudgets} />
+                        <Button title="Save Budgets" onPress={saveBudgets} />
                         <Button title="Cancel" onPress={() => setModalVisible(false)} />
                     </View>
                 </View>
             </Modal>
+
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={expenseModalVisible}
+                onRequestClose={() => setExpenseModalVisible(false)}>
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Add Expense</Text>
+                        <Picker
+                            selectedValue={selectedCategory}
+                            style={styles.picker}
+                            onValueChange={(itemValue) => setSelectedCategory(itemValue)}
+                        >
+                            {categories.map(category => (
+                                <Picker.Item key={category.name} label={category.name} value={category.name} />
+                            ))}
+                        </Picker>
+                        <TextInput
+                            style={styles.input}
+                            keyboardType="numeric"
+                            placeholder="Expense Amount"
+                            value={expenseAmount}
+                            onChangeText={setExpenseAmount}
+                        />
+                        <Button title="Add Expense" onPress={addExpense} />
+                        <Button title="Cancel" onPress={() => setExpenseModalVisible(false)} />
+                    </View>
+                </View>
+            </Modal>
+
         </View>
     );
 };
@@ -244,15 +433,24 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     input: {
+        height: 40,
+        borderColor: Colors.light.primary,
         borderWidth: 1,
-        borderColor: '#ddd',
         borderRadius: 5,
-        padding: 10,
-        width: '60%',
-    },
+        paddingHorizontal: 10,
+        color: Colors.light.text,
+        backgroundColor: Colors.light.tertiary,
+        marginBottom: 20,
+      },
+    picker: {
+        height: 50,
+        width: '100%',
+        color: Colors.light.primary,
+        backgroundColor: Colors.light.secondary,
+        marginVertical: 10,
+      }
 });
 
 export default BudgetPlanner;
-
 
 
