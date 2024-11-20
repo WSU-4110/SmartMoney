@@ -1,4 +1,4 @@
-//import statements
+// Import statements
 import React, { FC, useState, useEffect } from 'react';
 import {
   View,
@@ -14,17 +14,14 @@ import {
 } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import {
-  LineChart,
-  BarChart,
-  PieChart,
-} from 'react-native-gifted-charts';
+import { LineChart, BarChart, PieChart } from 'react-native-gifted-charts';
 import { Ionicons } from '@expo/vector-icons';
+import { parse, format } from 'date-fns';
 
-//get device screen dimensions
+// Get device screen dimensions
 const { width } = Dimensions.get('window');
 
-//interface definitions
+// Interface definitions
 interface Transaction {
   id: number;
   date: string;
@@ -42,9 +39,9 @@ const DataPage: FC = () => {
   const colorScheme = useColorScheme();
   const currentColors = Colors[colorScheme ?? 'light'];
 
-  //state variables
+  // State variables
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [categories, setCategories] = useState<Category[]>([
+  const [categories] = useState<Category[]>([
     { name: 'Food', color: currentColors.accent },
     { name: 'Transport', color: currentColors.secondary },
     { name: 'Utilities', color: currentColors.primary },
@@ -57,10 +54,10 @@ const DataPage: FC = () => {
     date: '',
     amount: '',
     category: '',
-    type: 'Expense',
+    type: 'Expense' as 'Income' | 'Expense',
   });
 
-  //new state for budgets per category
+  // New state for budgets per category
   const [categoryBudgets, setCategoryBudgets] = useState<{ [key: string]: number }>({
     Food: 500,
     Transport: 200,
@@ -69,17 +66,17 @@ const DataPage: FC = () => {
     Healthcare: 250,
   });
 
-  //new state for category budget modal
+  // New state for category budget modal
   const [budgetModalVisible, setBudgetModalVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [newBudget, setNewBudget] = useState<string>('');
 
-  //summary metrics
+  // Summary metrics
   const [totalIncome, setTotalIncome] = useState<number>(0);
   const [totalExpense, setTotalExpense] = useState<number>(0);
   const [netBalance, setNetBalance] = useState<number>(0);
 
-  //effect to calculate summaries
+  // Effect to calculate summaries
   useEffect(() => {
     const income = transactions
       .filter((t) => t.type === 'Income')
@@ -92,12 +89,13 @@ const DataPage: FC = () => {
     setNetBalance(income - expense);
   }, [transactions]);
 
-  //handlers
+  // Handlers
   const handleAddTransaction = () => {
     if (
       newTransaction.date &&
       newTransaction.amount &&
-      newTransaction.category
+      newTransaction.category &&
+      !isNaN(parseFloat(newTransaction.amount))
     ) {
       setTransactions([
         ...transactions,
@@ -106,7 +104,7 @@ const DataPage: FC = () => {
           date: newTransaction.date,
           amount: parseFloat(newTransaction.amount),
           category: newTransaction.category,
-          type: newTransaction.type as 'Income' | 'Expense',
+          type: newTransaction.type,
         },
       ]);
       setNewTransaction({
@@ -117,12 +115,12 @@ const DataPage: FC = () => {
       });
       setModalVisible(false);
     } else {
-      Alert.alert('Error', 'Please fill all fields');
+      Alert.alert('Error', 'Please fill all fields with valid data');
     }
   };
 
   const handleSetBudget = () => {
-    if (newBudget && selectedCategory) {
+    if (newBudget && selectedCategory && !isNaN(parseFloat(newBudget))) {
       setCategoryBudgets({
         ...categoryBudgets,
         [selectedCategory]: parseFloat(newBudget),
@@ -131,33 +129,36 @@ const DataPage: FC = () => {
       setSelectedCategory('');
       setBudgetModalVisible(false);
     } else {
-      Alert.alert('Error', 'Please enter a valid budget');
+      Alert.alert('Error', 'Please enter a valid budget amount');
     }
   };
 
-  //assign colors to categories
+  // Assign colors to categories
   const categoryColors = categories.reduce((acc, cat) => {
     acc[cat.name] = cat.color;
     return acc;
   }, {} as { [key: string]: string });
 
-  //data for charts
+  // Data for charts
   const expenseData = transactions.filter((t) => t.type === 'Expense');
   const incomeData = transactions.filter((t) => t.type === 'Income');
 
-  //group expenses by month for line chart
+  // Group expenses by month for line chart
   const monthlyExpenses = expenseData.reduce((acc, curr) => {
-    const month = curr.date.substr(0, 7); //assuming date format is 'YYYY-MM-DD' (format will change)
+    const dateObj = parse(curr.date);
+    const month = format(dateObj, 'yyyy-MM');
     acc[month] = (acc[month] || 0) + curr.amount;
     return acc;
   }, {} as { [key: string]: number });
 
-  const lineChartData = Object.keys(monthlyExpenses).map((month) => ({
-    value: monthlyExpenses[month],
-    label: month.substr(5, 2), //extract month
-  }));
+  const lineChartData = Object.keys(monthlyExpenses)
+    .sort()
+    .map((month) => ({
+      value: monthlyExpenses[month],
+      label: month.substr(5, 2), // Extract month
+    }));
 
-  //group expenses by category for bar and pie charts
+  // Group expenses by category for bar and pie charts
   const categoryExpenses = categories.map((cat) => {
     const total = expenseData
       .filter((t) => t.category === cat.name)
@@ -165,7 +166,7 @@ const DataPage: FC = () => {
     return { category: cat.name, amount: total };
   });
 
-  //budget progress per category
+  // Budget progress per category
   const categoryProgress = categoryExpenses.map((item) => {
     const budget = categoryBudgets[item.category] || 0;
     const progress = (item.amount / budget) * 100;
@@ -178,43 +179,27 @@ const DataPage: FC = () => {
   });
 
   return (
-    <SafeAreaView
-      style={[
-        styles.container,
-        { backgroundColor: currentColors.background },
-      ]}
-    >
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
+    <SafeAreaView style={[styles.container, { backgroundColor: currentColors.background }]}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {/* Header */}
-        <Text style={[styles.headerTitle, { color: currentColors.text }]}>
-          Budget Planner
-        </Text>
+        <Text style={[styles.headerTitle, { color: currentColors.text }]}>Budget Planner</Text>
 
         {/* Summary Cards */}
         <View style={styles.summaryContainer}>
           <View style={[styles.summaryCard, { backgroundColor: currentColors.tertiary }]}>
-            <Text style={[styles.summaryTitle, { color: currentColors.text }]}>
-              Total Income
-            </Text>
+            <Text style={[styles.summaryTitle, { color: currentColors.text }]}>Total Income</Text>
             <Text style={[styles.summaryAmount, { color: currentColors.text }]}>
               ${totalIncome.toFixed(2)}
             </Text>
           </View>
           <View style={[styles.summaryCard, { backgroundColor: currentColors.tertiary }]}>
-            <Text style={[styles.summaryTitle, { color: currentColors.text }]}>
-              Total Expense
-            </Text>
+            <Text style={[styles.summaryTitle, { color: currentColors.text }]}>Total Expense</Text>
             <Text style={[styles.summaryAmount, { color: currentColors.icon }]}>
               ${totalExpense.toFixed(2)}
             </Text>
           </View>
           <View style={[styles.summaryCard, { backgroundColor: currentColors.tertiary }]}>
-            <Text style={[styles.summaryTitle, { color: currentColors.text }]}>
-              Net Balance
-            </Text>
+            <Text style={[styles.summaryTitle, { color: currentColors.text }]}>Net Balance</Text>
             <Text style={[styles.summaryAmount, { color: currentColors.primary }]}>
               ${netBalance.toFixed(2)}
             </Text>
@@ -241,9 +226,7 @@ const DataPage: FC = () => {
 
         {/* Line Chart for Monthly Spending */}
         <View style={styles.chartContainer}>
-          <Text style={[styles.chartTitle, { color: currentColors.text }]}>
-            Monthly Expense Trend
-          </Text>
+          <Text style={[styles.chartTitle, { color: currentColors.text }]}>Monthly Expense Trend</Text>
           <LineChart
             data={lineChartData}
             width={width - 40}
@@ -294,7 +277,6 @@ const DataPage: FC = () => {
             yAxisOffset={10}
             noOfSections={4}
             maxValue={Math.max(...categoryProgress.map((d) => d.budget)) + 100}
-            
           />
         </View>
 
@@ -315,14 +297,8 @@ const DataPage: FC = () => {
             innerCircleColor={currentColors.background}
             centerLabelComponent={() => (
               <View style={styles.centerLabel}>
-                <Text
-                  style={[styles.centerLabelAmount, { color: currentColors.text }]}
-                >
-                  Total
-                </Text>
-                <Text
-                  style={[styles.centerLabelText, { color: currentColors.text }]}
-                >
+                <Text style={[styles.centerLabelAmount, { color: currentColors.text }]}>Total</Text>
+                <Text style={[styles.centerLabelText, { color: currentColors.text }]}>
                   ${totalExpense.toFixed(2)}
                 </Text>
               </View>
@@ -335,17 +311,10 @@ const DataPage: FC = () => {
                 <View
                   style={[
                     styles.legendColorBox,
-                    {
-                      backgroundColor:
-                        categoryColors[item.category] || currentColors.accent,
-                    },
+                    { backgroundColor: categoryColors[item.category] || currentColors.accent },
                   ]}
                 />
-                <Text
-                  style={[styles.legendText, { color: currentColors.text }]}
-                >
-                  {item.category}
-                </Text>
+                <Text style={[styles.legendText, { color: currentColors.text }]}>{item.category}</Text>
               </View>
             ))}
           </View>
@@ -359,14 +328,10 @@ const DataPage: FC = () => {
           {transactions.slice(-5).reverse().map((item) => (
             <View key={item.id} style={styles.transactionItem}>
               <View>
-                <Text
-                  style={[styles.transactionCategory, { color: currentColors.text }]}
-                >
+                <Text style={[styles.transactionCategory, { color: currentColors.text }]}>
                   {item.category}
                 </Text>
-                <Text
-                  style={[styles.transactionDate, { color: currentColors.icon }]}
-                >
+                <Text style={[styles.transactionDate, { color: currentColors.icon }]}>
                   {item.date}
                 </Text>
               </View>
@@ -374,8 +339,7 @@ const DataPage: FC = () => {
                 style={[
                   styles.transactionAmount,
                   {
-                    color:
-                      item.type === 'Income' ? currentColors.accent : currentColors.icon,
+                    color: item.type === 'Income' ? currentColors.accent : currentColors.icon,
                   },
                 ]}
               >
@@ -388,22 +352,13 @@ const DataPage: FC = () => {
         {/* Modal for Adding Transactions */}
         <Modal
           animationType="slide"
-          transparent={true}
+          transparent
           visible={modalVisible}
-          onRequestClose={() => {
-            setModalVisible(!modalVisible);
-          }}
+          onRequestClose={() => setModalVisible(!modalVisible)}
         >
           <View style={styles.modalOverlay}>
-            <View
-              style={[
-                styles.modalView,
-                { backgroundColor: currentColors.background },
-              ]}
-            >
-              <Text style={[styles.modalTitle, { color: currentColors.text }]}>
-                Add Transaction
-              </Text>
+            <View style={[styles.modalView, { backgroundColor: currentColors.background }]}>
+              <Text style={[styles.modalTitle, { color: currentColors.text }]}>Add Transaction</Text>
               <TextInput
                 style={[
                   styles.input,
@@ -411,9 +366,7 @@ const DataPage: FC = () => {
                 ]}
                 placeholder="Date (YYYY-MM-DD)"
                 placeholderTextColor={currentColors.icon}
-                onChangeText={(text) =>
-                  setNewTransaction({ ...newTransaction, date: text })
-                }
+                onChangeText={(text) => setNewTransaction({ ...newTransaction, date: text })}
                 value={newTransaction.date}
               />
               <TextInput
@@ -424,9 +377,7 @@ const DataPage: FC = () => {
                 placeholder="Amount"
                 placeholderTextColor={currentColors.icon}
                 keyboardType="numeric"
-                onChangeText={(text) =>
-                  setNewTransaction({ ...newTransaction, amount: text })
-                }
+                onChangeText={(text) => setNewTransaction({ ...newTransaction, amount: text })}
                 value={newTransaction.amount}
               />
               <TextInput
@@ -436,54 +387,40 @@ const DataPage: FC = () => {
                 ]}
                 placeholder="Category"
                 placeholderTextColor={currentColors.icon}
-                onChangeText={(text) =>
-                  setNewTransaction({ ...newTransaction, category: text })
-                }
+                onChangeText={(text) => setNewTransaction({ ...newTransaction, category: text })}
                 value={newTransaction.category}
               />
               <View style={styles.typeSwitch}>
                 <TouchableOpacity
                   style={[
-                    styles.typeButton, {backgroundColor: currentColors.tertiary},
-                    newTransaction.type === 'Expense' && {
-                      backgroundColor: currentColors.primary,
-                    },
+                    styles.typeButton,
+                    { backgroundColor: currentColors.tertiary },
+                    newTransaction.type === 'Expense' && { backgroundColor: currentColors.primary },
                   ]}
-                  onPress={() =>
-                    setNewTransaction({ ...newTransaction, type: 'Expense' })
-                  }
+                  onPress={() => setNewTransaction({ ...newTransaction, type: 'Expense' })}
                 >
                   <Text style={styles.typeButtonText}>Expense</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[
-                    styles.typeButton, {backgroundColor: currentColors.tertiary},
-                    newTransaction.type === 'Income' && {
-                      backgroundColor: currentColors.primary,
-                    },
+                    styles.typeButton,
+                    { backgroundColor: currentColors.tertiary },
+                    newTransaction.type === 'Income' && { backgroundColor: currentColors.primary },
                   ]}
-                  onPress={() =>
-                    setNewTransaction({ ...newTransaction, type: 'Income' })
-                  }
+                  onPress={() => setNewTransaction({ ...newTransaction, type: 'Income' })}
                 >
                   <Text style={styles.typeButtonText}>Income</Text>
                 </TouchableOpacity>
               </View>
               <View style={styles.modalButtons}>
                 <TouchableOpacity
-                  style={[
-                    styles.modalButton,
-                    { backgroundColor: currentColors.accent },
-                  ]}
+                  style={[styles.modalButton, { backgroundColor: currentColors.accent }]}
                   onPress={handleAddTransaction}
                 >
                   <Text style={styles.modalButtonText}>Add</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[
-                    styles.modalButton,
-                    { backgroundColor: currentColors.icon },
-                  ]}
+                  style={[styles.modalButton, { backgroundColor: currentColors.icon }]}
                   onPress={() => setModalVisible(false)}
                 >
                   <Text style={styles.modalButtonText}>Cancel</Text>
@@ -496,22 +433,13 @@ const DataPage: FC = () => {
         {/* Modal for Setting Budgets */}
         <Modal
           animationType="slide"
-          transparent={true}
+          transparent
           visible={budgetModalVisible}
-          onRequestClose={() => {
-            setBudgetModalVisible(!budgetModalVisible);
-          }}
+          onRequestClose={() => setBudgetModalVisible(!budgetModalVisible)}
         >
           <View style={styles.modalOverlay}>
-            <View
-              style={[
-                styles.modalView,
-                { backgroundColor: currentColors.background },
-              ]}
-            >
-              <Text style={[styles.modalTitle, { color: currentColors.text }]}>
-                Set Budget
-              </Text>
+            <View style={[styles.modalView, { backgroundColor: currentColors.background }]}>
+              <Text style={[styles.modalTitle, { color: currentColors.text }]}>Set Budget</Text>
               <Text style={[styles.modalSubtitle, { color: currentColors.text }]}>
                 Select Category
               </Text>
@@ -520,10 +448,9 @@ const DataPage: FC = () => {
                   <TouchableOpacity
                     key={index}
                     style={[
-                      styles.categoryItem,{ backgroundColor: currentColors.tertiary},
-                      selectedCategory === cat.name && {
-                        backgroundColor: currentColors.accent,
-                      },
+                      styles.categoryItem,
+                      { backgroundColor: currentColors.tertiary },
+                      selectedCategory === cat.name && { backgroundColor: currentColors.accent },
                     ]}
                     onPress={() => setSelectedCategory(cat.name)}
                   >
@@ -546,19 +473,13 @@ const DataPage: FC = () => {
               />
               <View style={styles.modalButtons}>
                 <TouchableOpacity
-                  style={[
-                    styles.modalButton,
-                    { backgroundColor: currentColors.primary },
-                  ]}
+                  style={[styles.modalButton, { backgroundColor: currentColors.primary }]}
                   onPress={handleSetBudget}
                 >
                   <Text style={styles.modalButtonText}>Set Budget</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[
-                    styles.modalButton,
-                    { backgroundColor: currentColors.icon },
-                  ]}
+                  style={[styles.modalButton, { backgroundColor: currentColors.icon }]}
                   onPress={() => setBudgetModalVisible(false)}
                 >
                   <Text style={styles.modalButtonText}>Cancel</Text>
@@ -567,13 +488,12 @@ const DataPage: FC = () => {
             </View>
           </View>
         </Modal>
-
       </ScrollView>
     </SafeAreaView>
   );
 };
 
-//styles
+// Styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -733,7 +653,6 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     alignItems: 'center',
     marginHorizontal: 5,
-    backgroundColor: '#ccc',
   },
   typeButtonText: {
     color: '#fff',
@@ -763,7 +682,6 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 8,
     margin: 5,
-    backgroundColor: '#ccc',
   },
   categoryItemText: {
     fontSize: 16,

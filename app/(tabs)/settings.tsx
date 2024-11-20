@@ -12,7 +12,7 @@ import {
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { FontAwesome } from '@expo/vector-icons';
-import { useAuth } from '@/app/auth/AuthProvider';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { router } from 'expo-router';
 
 const SettingsPage: FC = () => {
@@ -20,24 +20,23 @@ const SettingsPage: FC = () => {
   const currentColors = Colors[colorScheme ?? 'light'];
   const { logout } = useAuth();
 
-  //state for toggles
   const [isDarkMode, setIsDarkMode] = useState(colorScheme === 'dark');
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [biometricsEnabled, setBiometricsEnabled] = useState(false);
 
   const toggleDarkMode = () => {
     setIsDarkMode((previousState) => !previousState);
-    //logic to switch the app theme will be added here
+    // logic to switch the app theme will be added here
   };
 
   const toggleNotifications = () => {
     setNotificationsEnabled((previousState) => !previousState);
-    //logic to enable/disable notifications will be added here
+    // logic to enable/disable notifications will be added here
   };
 
   const toggleBiometrics = () => {
     setBiometricsEnabled((previousState) => !previousState);
-    //logic to enable/disable biometrics will be added here
+    // logic to enable/disable biometrics will be added here
   };
 
   const handleLogout = async () => {
@@ -47,7 +46,7 @@ const SettingsPage: FC = () => {
       [
         {
           text: "Cancel",
-          style: "cancel"
+          style: "cancel",
         },
         {
           text: "Logout",
@@ -59,8 +58,8 @@ const SettingsPage: FC = () => {
               console.error('Logout error:', error);
               Alert.alert('Error', 'Failed to logout. Please try again.');
             }
-          }
-        }
+          },
+        },
       ]
     );
   };
@@ -76,6 +75,7 @@ const SettingsPage: FC = () => {
           <View style={styles.settingItem}>
             <Text style={[styles.settingText, { color: currentColors.text }]}>Dark Mode</Text>
             <Switch
+              testID="dark-mode-switch"
               value={isDarkMode}
               onValueChange={toggleDarkMode}
               thumbColor={isDarkMode ? currentColors.primary : '#f4f3f4'}
@@ -92,6 +92,7 @@ const SettingsPage: FC = () => {
               Enable Notifications
             </Text>
             <Switch
+              testID="notifications-switch"
               value={notificationsEnabled}
               onValueChange={toggleNotifications}
               thumbColor={notificationsEnabled ? currentColors.primary : '#f4f3f4'}
@@ -106,6 +107,7 @@ const SettingsPage: FC = () => {
           <View style={styles.settingItem}>
             <Text style={[styles.settingText, { color: currentColors.text }]}>Use Biometrics</Text>
             <Switch
+              testID="biometrics-switch"
               value={biometricsEnabled}
               onValueChange={toggleBiometrics}
               thumbColor={biometricsEnabled ? currentColors.primary : '#f4f3f4'}
@@ -117,13 +119,13 @@ const SettingsPage: FC = () => {
         {/* Account Section */}
         <View style={styles.sectionContainer}>
           <Text style={[styles.sectionHeader, { color: currentColors.text }]}>Account</Text>
-          <TouchableOpacity style={styles.settingItem}>
+          <TouchableOpacity testID="change-password" style={styles.settingItem}>
             <Text style={[styles.settingText, { color: currentColors.text }]}>
               Change Password
             </Text>
             <FontAwesome name="angle-right" size={24} color={currentColors.icon} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.settingItem}>
+          <TouchableOpacity testID="privacy-settings" style={styles.settingItem}>
             <Text style={[styles.settingText, { color: currentColors.text }]}>
               Privacy Settings
             </Text>
@@ -134,11 +136,11 @@ const SettingsPage: FC = () => {
         {/* About Section */}
         <View style={styles.sectionContainer}>
           <Text style={[styles.sectionHeader, { color: currentColors.text }]}>About</Text>
-          <TouchableOpacity style={styles.settingItem}>
+          <TouchableOpacity testID="terms-of-service" style={styles.settingItem}>
             <Text style={[styles.settingText, { color: currentColors.text }]}>Terms of Service</Text>
             <FontAwesome name="angle-right" size={24} color={currentColors.icon} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.settingItem}>
+          <TouchableOpacity testID="privacy-policy" style={styles.settingItem}>
             <Text style={[styles.settingText, { color: currentColors.text }]}>Privacy Policy</Text>
             <FontAwesome name="angle-right" size={24} color={currentColors.icon} />
           </TouchableOpacity>
@@ -147,11 +149,11 @@ const SettingsPage: FC = () => {
             <Text style={[styles.settingSubText, { color: currentColors.secondary }]}>1.0.0</Text>
           </View>
         </View>
-        
+
         {/* Report a Bug */}
         <View style={styles.sectionContainer}>
           <Text style={[styles.sectionHeader, { color: currentColors.text }]}>Report</Text>
-          <TouchableOpacity style={styles.settingItem}>
+          <TouchableOpacity testID="report-bug" style={styles.settingItem}>
             <Text style={[styles.settingText, { color: currentColors.text }]}>Report a Bug</Text>
             <FontAwesome name="angle-right" size={24} color={currentColors.icon} />
           </TouchableOpacity>
@@ -159,6 +161,7 @@ const SettingsPage: FC = () => {
 
         {/* Logout Button */}
         <TouchableOpacity
+          testID="logout-button"
           style={[styles.logoutButton, { backgroundColor: currentColors.accent }]}
           onPress={handleLogout}
         >
@@ -172,27 +175,11 @@ const SettingsPage: FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    paddingBottom: 90
-  },
-  sectionTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    marginBottom: 20,
-  },
-  sectionContainer: {
-    marginBottom: 30,
-  },
-  sectionHeader: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 15,
-  },
+  container: { flex: 1 },
+  scrollContent: { paddingVertical: 20, paddingHorizontal: 20, paddingBottom: 90 },
+  sectionTitle: { fontSize: 28, fontWeight: '700', marginBottom: 20 },
+  sectionContainer: { marginBottom: 30 },
+  sectionHeader: { fontSize: 18, fontWeight: '600', marginBottom: 15 },
   settingItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -202,23 +189,10 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ccc',
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  settingText: {
-    fontSize: 16,
-  },
-  settingSubText: {
-    fontSize: 16,
-    color: '#666',
-  },
-  logoutButton: {
-    marginTop: 40,
-    paddingVertical: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  logoutButtonText: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
+  settingText: { fontSize: 16 },
+  settingSubText: { fontSize: 16, color: '#666' },
+  logoutButton: { marginTop: 40, paddingVertical: 15, borderRadius: 8, alignItems: 'center' },
+  logoutButtonText: { fontSize: 18, fontWeight: '600' },
 });
 
 export default SettingsPage;

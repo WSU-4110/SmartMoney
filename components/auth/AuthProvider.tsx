@@ -101,9 +101,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         const serverResponse = await api.post('/user/auth', {
           email: userInfo.email,
-          name: userInfo.name,
         });
+        await AsyncStorage.setItem('userId', serverResponse.data.user.userId);
         console.log('Server response:', serverResponse.data);
+        console.log('User ID:', await AsyncStorage.getItem('userId'));
         return serverResponse.data;
       } catch (error: any) {
         console.error('API call failed:', error.message);
