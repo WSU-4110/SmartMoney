@@ -11,12 +11,12 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 interface ThemeProviderProps {
   children: ReactNode;
-  value: ThemeContextType;
 }
 
-export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children, value }) => {
+export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
+  const { theme, toggleTheme } = usePersistedTheme();
   return (
-    <ThemeContext.Provider value={value}>
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );
@@ -36,21 +36,18 @@ export const usePersistedTheme = () => {
   const [theme, setTheme] = useState(DefaultTheme);
 
   useEffect(() => {
-    // Load saved theme from storage
     const loadTheme = async () => {
       const savedTheme = await AsyncStorage.getItem(THEME_STORAGE_KEY);
       if (savedTheme) {
         setTheme(savedTheme === 'dark' ? DarkTheme : DefaultTheme);
       }
     };
-
     loadTheme();
   }, []);
 
   const toggleTheme = async () => {
     const newTheme = theme.dark ? DefaultTheme : DarkTheme;
     setTheme(newTheme);
-    // Save theme to storage
     await AsyncStorage.setItem(THEME_STORAGE_KEY, newTheme.dark ? 'dark' : 'light');
   };
 

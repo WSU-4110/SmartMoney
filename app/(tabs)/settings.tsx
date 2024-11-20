@@ -1,216 +1,140 @@
-import React, { FC, useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  TouchableOpacity,
-  Alert,
-} from 'react-native';
-import { Colors } from '@/constants/Colors';
+import React, { useState } from 'react';
+import { View, Text, Switch, Pressable, Alert, StyleSheet } from 'react-native';
 import { useTheme } from '../themeContext';
-import { FontAwesome } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/app/auth/AuthProvider';
-import { router } from 'expo-router';
 
-const SettingsPage: FC = () => {
+const SettingsPage = () => {
   const { theme, toggleTheme } = useTheme();
-  const currentColors = Colors[theme.dark ? 'dark' : 'light'];
   const { logout } = useAuth();
-
-  // State for additional toggles
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [biometricsEnabled, setBiometricsEnabled] = useState(false);
 
-  const toggleNotifications = () => {
-    setNotificationsEnabled((previousState) => !previousState);
-    //logic to enable/disable notifications will be added here
-  };
+  const toggleNotifications = () => setNotificationsEnabled(!notificationsEnabled);
+  const toggleBiometrics = () => setBiometricsEnabled(!biometricsEnabled);
 
-  const toggleBiometrics = () => {
-    setBiometricsEnabled((previousState) => !previousState);
-    //logic to enable/disable biometrics will be added here
-  };
-
-  const handleLogout = async () => {
+  const handleLogout = () => {
     Alert.alert(
-      "Logout",
-      "Are you sure you want to logout?",
+      'Logout',
+      'Are you sure you want to logout?',
       [
         {
-          text: "Cancel",
-          style: "cancel"
+          text: 'Cancel',
+          style: 'cancel',
         },
         {
-          text: "Logout",
-          onPress: async () => {
-            try {
-              await logout();
-              router.replace('/login');
-            } catch (error) {
-              console.error('Logout error:', error);
-              Alert.alert('Error', 'Failed to logout. Please try again.');
-            }
-          }
-        }
+          text: 'Logout',
+          onPress: logout,
+          style: 'destructive',
+        },
       ]
     );
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: currentColors.background }]}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={[styles.sectionTitle, { color: currentColors.text }]}>Settings</Text>
-
-        {/* Appearance Section */}
-        <View style={styles.sectionContainer}>
-          <Text style={[styles.sectionHeader, { color: currentColors.text }]}>Appearance</Text>
-          <View style={styles.settingItem}>
-            <Text style={[styles.settingText, { color: currentColors.text }]}>Dark Mode</Text>
-            <Switch
-              value={theme.dark}
-              onValueChange={toggleTheme}
-              thumbColor={theme.dark ? currentColors.primary : '#f4f3f4'}
-              trackColor={{ false: '#767577', true: currentColors.primary }}
-            />
-          </View>
+    <View style={styles.container}>
+      <Text style={styles.title}>Settings</Text>
+      
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Appearance</Text>
+        <View style={styles.row}>
+          <Text>Dark Mode</Text>
+          <Switch
+            value={theme.dark}
+            onValueChange={toggleTheme}
+            thumbColor={theme.dark ? '#000' : '#f4f3f4'}
+            trackColor={{ false: '#767577', true: '#023c69' }}
+            accessibilityLabel="Dark Mode"
+          />
         </View>
+      </View>
 
-        {/* Notifications Section */}
-        <View style={styles.sectionContainer}>
-          <Text style={[styles.sectionHeader, { color: currentColors.text }]}>Notifications</Text>
-          <View style={styles.settingItem}>
-            <Text style={[styles.settingText, { color: currentColors.text }]}>
-              Enable Notifications
-            </Text>
-            <Switch
-              value={notificationsEnabled}
-              onValueChange={toggleNotifications}
-              thumbColor={notificationsEnabled ? currentColors.primary : '#f4f3f4'}
-              trackColor={{ false: '#767577', true: currentColors.primary }}
-            />
-          </View>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Notifications</Text>
+        <View style={styles.row}>
+          <Text>Enable Notifications</Text>
+          <Switch
+            value={notificationsEnabled}
+            onValueChange={toggleNotifications}
+            thumbColor={notificationsEnabled ? '#000' : '#f4f3f4'}
+            trackColor={{ false: '#767577', true: '#023c69' }}
+            accessibilityLabel="Enable Notifications"
+          />
         </View>
+      </View>
 
-        {/* Security Section */}
-        <View style={styles.sectionContainer}>
-          <Text style={[styles.sectionHeader, { color: currentColors.text }]}>Security</Text>
-          <View style={styles.settingItem}>
-            <Text style={[styles.settingText, { color: currentColors.text }]}>Use Biometrics</Text>
-            <Switch
-              value={biometricsEnabled}
-              onValueChange={toggleBiometrics}
-              thumbColor={biometricsEnabled ? currentColors.primary : '#f4f3f4'}
-              trackColor={{ false: '#767577', true: currentColors.primary }}
-            />
-          </View>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Security</Text>
+        <View style={styles.row}>
+          <Text>Use Biometrics</Text>
+          <Switch
+            value={biometricsEnabled}
+            onValueChange={toggleBiometrics}
+            thumbColor={biometricsEnabled ? '#000' : '#f4f3f4'}
+            trackColor={{ false: '#767577', true: '#023c69' }}
+            accessibilityLabel="Use Biometrics"
+          />
         </View>
+      </View>
 
-        {/* Account Section */}
-        <View style={styles.sectionContainer}>
-          <Text style={[styles.sectionHeader, { color: currentColors.text }]}>Account</Text>
-          <TouchableOpacity style={styles.settingItem}>
-            <Text style={[styles.settingText, { color: currentColors.text }]}>
-              Change Password
-            </Text>
-            <FontAwesome name="angle-right" size={24} color={currentColors.icon} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.settingItem}>
-            <Text style={[styles.settingText, { color: currentColors.text }]}>
-              Privacy Settings
-            </Text>
-            <FontAwesome name="angle-right" size={24} color={currentColors.icon} />
-          </TouchableOpacity>
-        </View>
-
-        {/* About Section */}
-        <View style={styles.sectionContainer}>
-          <Text style={[styles.sectionHeader, { color: currentColors.text }]}>About</Text>
-          <TouchableOpacity style={styles.settingItem}>
-            <Text style={[styles.settingText, { color: currentColors.text }]}>Terms of Service</Text>
-            <FontAwesome name="angle-right" size={24} color={currentColors.icon} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.settingItem}>
-            <Text style={[styles.settingText, { color: currentColors.text }]}>Privacy Policy</Text>
-            <FontAwesome name="angle-right" size={24} color={currentColors.icon} />
-          </TouchableOpacity>
-          <View style={styles.settingItem}>
-            <Text style={[styles.settingText, { color: currentColors.text }]}>App Version</Text>
-            <Text style={[styles.settingSubText, { color: currentColors.secondary }]}>1.0.0</Text>
-          </View>
-        </View>
-
-        {/* Report a Bug */}
-        <View style={styles.sectionContainer}>
-          <Text style={[styles.sectionHeader, { color: currentColors.text }]}>Report</Text>
-          <TouchableOpacity style={styles.settingItem}>
-            <Text style={[styles.settingText, { color: currentColors.text }]}>Report a Bug</Text>
-            <FontAwesome name="angle-right" size={24} color={currentColors.icon} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Logout Button */}
-        <TouchableOpacity
-          style={[styles.logoutButton, { backgroundColor: currentColors.accent }]}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Account</Text>
+        <Pressable
+          style={styles.logoutButton}
           onPress={handleLogout}
         >
-          <Text style={[styles.logoutButtonText, { color: currentColors.background }]}>
-            Log Out
-          </Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </SafeAreaView>
+          <Text style={styles.logoutText}>Log Out</Text>
+        </Pressable>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>About</Text>
+        <View style={styles.row}>
+          <Text>App Version</Text>
+          <Text>1.0.0</Text>
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Report</Text>
+        <Text>Report an issue</Text>
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 16,
+    backgroundColor: '#fff',
   },
-  scrollContent: {
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    paddingBottom: 90,
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 24,
+  },
+  section: {
+    marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    marginBottom: 20,
-  },
-  sectionContainer: {
-    marginBottom: 30,
-  },
-  sectionHeader: {
     fontSize: 18,
     fontWeight: '600',
-    marginBottom: 15,
+    marginBottom: 12,
   },
-  settingItem: {
+  row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginVertical: 5,
-    paddingVertical: 15,
-    borderBottomColor: '#ccc',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  settingText: {
-    fontSize: 16,
-  },
-  settingSubText: {
-    fontSize: 16,
-    color: '#666',
+    paddingVertical: 8,
   },
   logoutButton: {
-    marginTop: 40,
-    paddingVertical: 15,
+    backgroundColor: '#ff3b30',
+    padding: 12,
     borderRadius: 8,
     alignItems: 'center',
   },
-  logoutButtonText: {
-    fontSize: 18,
+  logoutText: {
+    color: '#fff',
     fontWeight: '600',
   },
 });

@@ -1,10 +1,19 @@
-import * as React from 'react';
+// components/__tests__/ThemedText-test.tsx
+import React from 'react';
 import renderer from 'react-test-renderer';
-
 import { ThemedText } from '../ThemedText';
+import { ThemeProvider } from '../../app/themeContext';
+import { DefaultTheme } from '@react-navigation/native';
 
-it(`renders correctly`, () => {
-  const tree = renderer.create(<ThemedText>Snapshot test!</ThemedText>).toJSON();
+test('renders correctly', () => {
+  const tree = renderer
+    .create(
+      <ThemeProvider>
+        <ThemedText>Snapshot test!</ThemedText>
+      </ThemeProvider>
+    )
+    .toJSON();
 
   expect(tree).toMatchSnapshot();
 });
+
