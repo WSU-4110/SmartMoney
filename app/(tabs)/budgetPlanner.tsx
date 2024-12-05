@@ -64,19 +64,18 @@ export class BudgetPlannerLogic {
     }
 }
 
-// Export the component
 const BudgetPlanner = () => {
     const initialCategories = [
-        new Budget("Food", 200, 300),
-        new Budget("Housing", 1900, 2100),
-        new Budget("Transportation", 250, 500),
-        new Budget("Healthcare", 230, 250),
-        new Budget("Debt Payment", 1100, 1600),
-        new Budget("Entertainment", 25, 500),
-        new Budget("Personal", 130, 250),
-        new Budget("Utilities", 79, 200),
-        new Budget("Donation", 75, 100),
-        new Budget("Miscellaneous", 150, 500),
+        new Budget("Food",0, 300),
+        new Budget("Housing", 0, 2100),
+        new Budget("Transportation", 0, 500),
+        new Budget("Healthcare", 0, 250),
+        new Budget("Debt Payment", 0, 1600),
+        new Budget("Entertainment", 0, 500),
+        new Budget("Personal", 0, 250),
+        new Budget("Utilities", 0, 200),
+        new Budget("Donation", 0, 100),
+        new Budget("Miscellaneous", 0, 500),
     ];
 
     const [categories, setCategories] = useState<Budget[]>(initialCategories);
