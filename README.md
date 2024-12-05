@@ -19,6 +19,13 @@ npm install
 npx expo start
 ```
 
+## BudgetPlanner Dependencies
+```
+npm install react-native-progress
+```
+
+
+
 ### Compile (need to set up xcode or android studio for local compilation or use expo go)
 
 see expo docs 
