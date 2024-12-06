@@ -24,6 +24,11 @@ npx expo start
 npm install react-native-progress
 ```
 
+## Notifications Dependencies
+```
+npx expo install expo-notifications @react-native-async-storage/async-storage
+```
+
 
 
 ### Compile (need to set up xcode or android studio for local compilation or use expo go)
