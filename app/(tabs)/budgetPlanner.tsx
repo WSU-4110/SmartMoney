@@ -54,11 +54,11 @@ export class BudgetPlannerLogic {
         const progress = spent / budget;
         let color;
         if (progress < 0.71) {
-            color = '#4CAF50'; // Green
+            color = '#D2B48C';
         } else if (progress < 0.91) {
-            color = '#FFEB3B'; // Yellow
+            color = '#A37553'; 
         } else {
-            color = 'red'; // Red
+            color = '#5C4033';
         }
         return { progress: progress > 1 ? 1 : progress, color };
     }
@@ -227,12 +227,12 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 20,
-        backgroundColor: '#fff',
+        backgroundColor: '#f8ede1',
     },
     budgetSummaryContainer: {
         marginBottom: 20,
         padding: 15,
-        backgroundColor: '#e0f7fa',
+        backgroundColor: 'rgba(208, 205, 134, 1)',
         borderRadius: 10,
         borderWidth: 1,
         borderColor: '#b2ebf2',
@@ -241,18 +241,18 @@ const styles = StyleSheet.create({
     totalBudgetText: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: '#00796b',
+        color: '#5C4033',
         marginBottom: 5,
     },
     totalExpensesText: {
         fontSize: 16,
-        color: '#d32f2f',
+        color: '#5C4033',
         marginBottom: 5,
     },
     remainingBudgetText: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#388e3c',
+        color: '#5C4033',
     },
     scrollView: {
         flex: 1,
@@ -283,12 +283,14 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingVertical: 10,
         marginBottom: 10,
+        backgroundColor: '#00000',
+
     },
     button: {
         flex: 1,
         marginHorizontal: 5,
         paddingVertical: 15,
-        backgroundColor: '#4CAF50',
+        backgroundColor: '#674728',
         borderRadius: 5,
         alignItems: 'center',
     },
