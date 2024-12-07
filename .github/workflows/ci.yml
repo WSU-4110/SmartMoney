@@ -1,4 +1,4 @@
-name: Build and Test SmartMoney
+name: Test and Build SmartMoney
 
 on:
   push:
