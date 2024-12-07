@@ -1,0 +1,134 @@
+name: Build and Test SmartMoney
+
+on:
+  push:
+    branches:
+      - Korobeyko_Oleg_UnitTest
+  pull_request:
+    branches:
+      - Korobeyko_Oleg_UnitTest
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    env:
+      CI: true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install CocoaPods
+        run: |
+          sudo gem install cocoapods -v '>= 1.10.0'
+          cd ios && pod install --verbose --no-repo-update
+
+      - name: Run tests
+        run: CI=true npm run test
+
+      - name: Build iOS Archive
+        run: |
+          cd ios
+          set -o pipefail && xcodebuild clean archive \
+            -workspace SmartMoney.xcworkspace \
+            -scheme SmartMoney \
+            -configuration Release \
+            -archivePath $PWD/build/SmartMoney.xcarchive \
+            CODE_SIGN_STYLE="Automatic" \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            DEVELOPMENT_TEAM="" \
+            -verbose
+
+      # Manually package the app into an IPA (unsigned)
+      - name: Create unsigned IPA
+        run: |
+          cd ios
+          # Create a payload directory and place the .app inside
+          mkdir Payload
+          cp -R build/SmartMoney.xcarchive/Products/Applications/SmartMoney.app Payload/
+          # Zip up the Payload directory and rename to .ipa
+          zip -r SmartMoney.zip Payload
+          mv SmartMoney.zip SmartMoney.ipa
+
+      - name: Upload iOS artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ios-build
+          path: ios/SmartMoney.ipa
+
+  build-android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CI: true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Android SDK
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openjdk-17-jdk wget unzip
+          wget https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip
+          mkdir -p $HOME/android-sdk/cmdline-tools
+          unzip -q commandlinetools-linux-8512546_latest.zip -d $HOME/android-sdk/cmdline-tools
+          mv $HOME/android-sdk/cmdline-tools/cmdline-tools $HOME/android-sdk/cmdline-tools/latest
+          echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=$HOME/android-sdk" >> $GITHUB_ENV
+          yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
+          $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-30" "build-tools;30.0.3"
+
+      - name: Build Android
+        run: |
+          cd android
+          ./gradlew assembleRelease --info
+
+      - name: Upload Android artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: android-build
+          path: android/app/build/outputs/apk/release/app-release.apk
+
+  shared-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CI: true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: CI=true npm run test
