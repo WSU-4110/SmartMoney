@@ -2,19 +2,40 @@ import React from 'react';
 import { create, act } from 'react-test-renderer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as WebBrowser from 'expo-web-browser';
-import { useAuthRequest } from 'expo-auth-session';
+import { useAuthRequest, makeRedirectUri } from 'expo-auth-session';
 import { AuthProvider, useAuth } from '@/components/auth/AuthProvider';
+
+// Mock for AsyncStorage
+jest.mock('@react-native-async-storage/async-storage', () =>
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
+);
+
+// Mock for WebBrowser
+jest.mock('expo-web-browser', () => ({
+  openAuthSessionAsync: jest.fn().mockResolvedValue({ type: 'success' }),
+  maybeCompleteAuthSession: jest.fn(), // Mock missing function
+}));
+
+// Mock for AuthSession
+jest.mock('expo-auth-session', () => ({
+  useAuthRequest: jest.fn(() => [
+    null,
+    null,
+    jest.fn().mockResolvedValue({ type: 'success', params: { access_token: 'token' } }),
+  ]),
+  makeRedirectUri: jest.fn(() => 'mock-redirect-uri'), // Mock makeRedirectUri
+}));
 
 const mockUser = {
   email: 'test@example.com',
   name: 'Test User',
-  picture: 'https://example.com/picture.jpg'
+  picture: 'https://example.com/picture.jpg',
 };
 
 describe('AuthProvider', () => {
   let root: any;
   let authContext: ReturnType<typeof useAuth>;
-  
+
   const TestComponent = () => {
     const auth = useAuth();
     authContext = auth;
@@ -23,23 +44,22 @@ describe('AuthProvider', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Reset all mocks
     (AsyncStorage.getItem as jest.Mock).mockReset();
     (AsyncStorage.setItem as jest.Mock).mockReset();
     (AsyncStorage.removeItem as jest.Mock).mockReset();
     (WebBrowser.openAuthSessionAsync as jest.Mock).mockReset();
+    (WebBrowser.maybeCompleteAuthSession as jest.Mock).mockReset();
+    (makeRedirectUri as jest.Mock).mockClear();
 
     // Set default implementations
     (AsyncStorage.getItem as jest.Mock).mockResolvedValue(null);
     (AsyncStorage.setItem as jest.Mock).mockResolvedValue(undefined);
     (AsyncStorage.removeItem as jest.Mock).mockResolvedValue(undefined);
     (WebBrowser.openAuthSessionAsync as jest.Mock).mockResolvedValue({ type: 'success' });
-    (useAuthRequest as jest.Mock).mockReturnValue([
-      null,
-      null,
-      jest.fn().mockResolvedValue({ type: 'success', params: { access_token: 'token' } })
-    ]);
+    (WebBrowser.maybeCompleteAuthSession as jest.Mock).mockReturnValue(undefined);
+    (makeRedirectUri as jest.Mock).mockReturnValue('mock-redirect-uri');
   });
 
   afterEach(() => {

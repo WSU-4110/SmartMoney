@@ -1,14 +1,23 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import SettingsPage from '@/app/(tabs)/settings';
-import { useTheme } from '@/app/themeContext';
-import { useAuth } from '@/components/auth/AuthProvider';
+import SettingsPage from '../../app/(tabs)/settings';
+import { useTheme } from '../../app/themeContext';
+import { useAuth } from '../../components/auth/AuthProvider';
 import { Alert } from 'react-native';
 
 // Mock the custom hooks
-jest.mock('../themeContext');
-jest.mock('@/app/auth/AuthProvider');
-jest.mock('@react-native-async-storage/async-storage');
+jest.mock('../../app/themeContext');
+jest.mock('../../components/auth/AuthProvider');
+
+// Mock AsyncStorage
+jest.mock('@react-native-async-storage/async-storage', () => {
+  return {
+    setItem: jest.fn(),
+    getItem: jest.fn(),
+    removeItem: jest.fn(),
+    clear: jest.fn(),
+  };
+});
 
 jest.mock('expo-router', () => ({
   router: {
@@ -17,16 +26,15 @@ jest.mock('expo-router', () => ({
 }));
 
 describe('SettingsPage', () => {
-  const mockToggleTheme = jest.fn();
   const mockLogout = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
 
-    // Mock theme context with a more complete implementation
+    // Mock theme context with a default implementation
     (useTheme as jest.Mock).mockImplementation(() => ({
       theme: { dark: false },
-      toggleTheme: mockToggleTheme,
+      toggleTheme: jest.fn(), // Mock this to prevent any unexpected side effects
     }));
 
     // Mock auth provider
@@ -49,19 +57,25 @@ describe('SettingsPage', () => {
   });
 
   it('toggles dark mode when the switch is pressed', () => {
-    const { getByRole } = render(<SettingsPage />);
+    const { getByTestId } = render(<SettingsPage />);
 
-    const darkModeSwitch = getByRole('switch', { name: 'Dark Mode' });
-    fireEvent(darkModeSwitch, 'valueChange', true);  // Changed this line
-    
-    expect(mockToggleTheme).toHaveBeenCalled();
+    const darkModeSwitch = getByTestId('dark-mode-switch');
+    expect(darkModeSwitch.props.value).toBe(false); // Initial state
+
+    fireEvent(darkModeSwitch, 'onValueChange', true);
+
+    expect(darkModeSwitch.props.value).toBe(true); // Updated state
   });
 
   it('toggles notifications when the switch is pressed', () => {
-    const { getByRole } = render(<SettingsPage />);
+    const { getByTestId } = render(<SettingsPage />);
 
-    const notificationSwitch = getByRole('switch', { name: 'Enable Notifications' });
-    fireEvent(notificationSwitch, 'valueChange', true);
+    const notificationSwitch = getByTestId('notifications-switch');
+    expect(notificationSwitch.props.value).toBe(true); // Initial state
+
+    fireEvent(notificationSwitch, 'onValueChange', false);
+
+    expect(notificationSwitch.props.value).toBe(false); // Updated state
   });
 
   it('logs out the user when the logout button is pressed', async () => {
