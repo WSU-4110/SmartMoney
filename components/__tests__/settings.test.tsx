@@ -1,8 +1,8 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import SettingsPage from './settings';
-import { useTheme } from '../themeContext';
-import { useAuth } from '@/app/auth/AuthProvider';
+import SettingsPage from '@/app/(tabs)/settings';
+import { useTheme } from '@/app/themeContext';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { Alert } from 'react-native';
 
 // Mock the custom hooks

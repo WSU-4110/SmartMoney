@@ -3,7 +3,7 @@ import { create, act } from 'react-test-renderer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as WebBrowser from 'expo-web-browser';
 import { useAuthRequest } from 'expo-auth-session';
-import { AuthProvider, useAuth } from './AuthProvider';
+import { AuthProvider, useAuth } from '@/components/auth/AuthProvider';
 
 const mockUser = {
   email: 'test@example.com',
