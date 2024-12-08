@@ -8,17 +8,12 @@ import {
   Switch,
   TouchableOpacity,
   Alert,
-  Modal,
-  TextInput,
-  Button,
 } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { FontAwesome } from '@expo/vector-icons';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { router } from 'expo-router';
-import { useEffect } from 'react';
-import { NotificationManager } from '@/utils/NotificationManager';
 
 const SettingsPage: FC = () => {
   const colorScheme = useColorScheme();
@@ -26,12 +21,8 @@ const SettingsPage: FC = () => {
   const { logout } = useAuth();
 
   const [isDarkMode, setIsDarkMode] = useState(colorScheme === 'dark');
-  // const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [biometricsEnabled, setBiometricsEnabled] = useState(false);
-
-  // State for bug report modal and input
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [bugReportText, setBugReportText] = useState('');
 
   const toggleDarkMode = () => {
     setIsDarkMode((previousState) => !previousState);
@@ -47,7 +38,6 @@ const SettingsPage: FC = () => {
     setBiometricsEnabled((previousState) => !previousState);
     // logic to enable/disable biometrics will be added here
   };
-
 
   const handleLogout = async () => {
     Alert.alert(
@@ -72,19 +62,6 @@ const SettingsPage: FC = () => {
         },
       ]
     );
-  };
-
-  const handleReportBug = () => setIsModalVisible(true);
-
-  const submitBugReport = () => {
-    if (bugReportText.trim()) {
-      // Submitting the bug report
-      Alert.alert('Bug Report Submitted', 'Thank you for your feedback!');
-      setBugReportText('');
-      setIsModalVisible(false);
-    } else {
-      Alert.alert('Error', 'Please enter a description of the issue.');
-    }
   };
 
   return (
@@ -193,32 +170,6 @@ const SettingsPage: FC = () => {
           </Text>
         </TouchableOpacity>
       </ScrollView>
-
-      {/* Bug Report Modal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={isModalVisible}
-        onRequestClose={() => setIsModalVisible(false)}
-      >
-        <View style={styles.modalBackground}>
-          <View style={[styles.modalContainer, { backgroundColor: currentColors.background }]}>
-            <Text style={[styles.modalTitle, { color: currentColors.text }]}>Report a Bug</Text>
-            <TextInput
-              style={[styles.textInput, { borderColor: currentColors.secondary }]}
-              placeholder="Describe the issue here"
-              placeholderTextColor={currentColors.secondary}
-              multiline
-              value={bugReportText}
-              onChangeText={setBugReportText}
-            />
-            <Button title="Submit" onPress={submitBugReport} color={currentColors.primary} />
-            <TouchableOpacity onPress={() => setIsModalVisible(false)} style={styles.closeButton}>
-              <Text style={{ color: currentColors.primary }}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 };

@@ -39,8 +39,8 @@ interface Institution {
 }
 
 const DetailedAccountPage: FC = () => {
-  const { theme, toggleTheme } = useTheme(); 
-  const currentColors = Colors[theme.dark ? 'dark' : 'light'];
+  const colorScheme = useColorScheme();
+  const currentColors = Colors[colorScheme ?? 'light'];
 
   const [institutions, setInstitutions] = useState<Institution[]>([]);
   const [selectedInstitution, setSelectedInstitution] = useState<Institution | null>(null);

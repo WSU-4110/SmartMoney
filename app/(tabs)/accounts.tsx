@@ -75,9 +75,8 @@ const fetchTransactions = async () => {
 };
 
 const AccountsPage = () => {
-  const { theme, toggleTheme } = useTheme(); 
-  const currentColors = Colors[theme.dark ? 'dark' : 'light'];
-
+  const colorScheme = useColorScheme();
+  const currentColors = Colors[colorScheme ?? 'light'];
 
   // Type the navigation prop
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
