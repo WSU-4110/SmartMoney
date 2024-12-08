@@ -17,6 +17,8 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { FontAwesome } from '@expo/vector-icons';
 import { useAuth } from '@/app/auth/AuthProvider';
 import { router } from 'expo-router';
+import { useEffect } from 'react';
+import { NotificationManager } from '@/utils/NotificationManager';
 
 const SettingsPage: FC = () => {
   const colorScheme = useColorScheme();
@@ -25,7 +27,7 @@ const SettingsPage: FC = () => {
 
   // State for toggles
   const [isDarkMode, setIsDarkMode] = useState(colorScheme === 'dark');
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  // const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [biometricsEnabled, setBiometricsEnabled] = useState(false);
 
   // State for bug report modal and input
@@ -33,17 +35,38 @@ const SettingsPage: FC = () => {
   const [bugReportText, setBugReportText] = useState('');
 
   const toggleDarkMode = () => {
-    setIsDarkMode((previousState) => !previousState);
+    setIsDarkMode((previousState: any) => !previousState);
     //logic to switch the app theme will be added here
   };
 
-  const toggleNotifications = () => {
-    setNotificationsEnabled((previousState) => !previousState);
-    //logic to enable/disable notifications will be added here
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  useEffect(() => {
+    NotificationManager.getNotificationStatus().then(setNotificationsEnabled);
+  }, []);
+  
+  const toggleNotifications = async () => {
+    try {
+      const newState = !notificationsEnabled;
+      const success = newState 
+        ? await NotificationManager.enableNotifications()
+        : await NotificationManager.disableNotifications();
+      
+      if (success) {
+        setNotificationsEnabled(newState);
+      } else {
+        Alert.alert(
+          'Permission Required',
+          'Please enable notifications in your device settings to receive updates.'
+        );
+      }
+    } catch (error) {
+      console.error('Error toggling notifications:', error);
+      Alert.alert('Error', 'Failed to update notification settings');
+    }
   };
 
   const toggleBiometrics = () => {
-    setBiometricsEnabled((previousState) => !previousState);
+    setBiometricsEnabled((previousState: any) => !previousState);
     //logic to enable/disable biometrics will be added here
   };
 
