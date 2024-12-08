@@ -3,10 +3,10 @@ name: Test and Build SmartMoney
 on:
   push:
     branches:
-      - Korobeyko_Oleg_UnitTest
+      - main
   pull_request:
     branches:
-      - Korobeyko_Oleg_UnitTest
+      - main
 
 jobs:
   build-ios:

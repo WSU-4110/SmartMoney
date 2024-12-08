@@ -346,8 +346,8 @@ const DataPage: FC = () => {
                 {item.type === 'Income' ? '+' : '-'}${item.amount.toFixed(2)}
               </Text>
             </View>
-
-            <ScrollView style={styles.scrollView}>{renderProgressBar()}</ScrollView>
+          ))}
+        </View>
 
         {/* Modal for Adding Transactions */}
         <Modal
