@@ -27,7 +27,7 @@ const SettingsPage: FC = () => {
 
   // State for toggles
   const [isDarkMode, setIsDarkMode] = useState(colorScheme === 'dark');
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  // const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [biometricsEnabled, setBiometricsEnabled] = useState(false);
 
   // State for bug report modal and input
