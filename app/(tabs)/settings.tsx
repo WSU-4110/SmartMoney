@@ -15,7 +15,7 @@ import {
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { FontAwesome } from '@expo/vector-icons';
-import { useAuth } from '@/app/auth/AuthProvider';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { router } from 'expo-router';
 import { useEffect } from 'react';
 import { NotificationManager } from '@/utils/NotificationManager';
@@ -25,7 +25,6 @@ const SettingsPage: FC = () => {
   const currentColors = Colors[colorScheme ?? 'light'];
   const { logout } = useAuth();
 
-  // State for toggles
   const [isDarkMode, setIsDarkMode] = useState(colorScheme === 'dark');
   // const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [biometricsEnabled, setBiometricsEnabled] = useState(false);
@@ -35,39 +34,18 @@ const SettingsPage: FC = () => {
   const [bugReportText, setBugReportText] = useState('');
 
   const toggleDarkMode = () => {
-    setIsDarkMode((previousState: any) => !previousState);
-    //logic to switch the app theme will be added here
+    setIsDarkMode((previousState) => !previousState);
+    // logic to switch the app theme will be added here
   };
 
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
-  useEffect(() => {
-    NotificationManager.getNotificationStatus().then(setNotificationsEnabled);
-  }, []);
-  
-  const toggleNotifications = async () => {
-    try {
-      const newState = !notificationsEnabled;
-      const success = newState 
-        ? await NotificationManager.enableNotifications()
-        : await NotificationManager.disableNotifications();
-      
-      if (success) {
-        setNotificationsEnabled(newState);
-      } else {
-        Alert.alert(
-          'Permission Required',
-          'Please enable notifications in your device settings to receive updates.'
-        );
-      }
-    } catch (error) {
-      console.error('Error toggling notifications:', error);
-      Alert.alert('Error', 'Failed to update notification settings');
-    }
+  const toggleNotifications = () => {
+    setNotificationsEnabled((previousState) => !previousState);
+    // logic to enable/disable notifications will be added here
   };
 
   const toggleBiometrics = () => {
-    setBiometricsEnabled((previousState: any) => !previousState);
-    //logic to enable/disable biometrics will be added here
+    setBiometricsEnabled((previousState) => !previousState);
+    // logic to enable/disable biometrics will be added here
   };
 
 
@@ -78,7 +56,7 @@ const SettingsPage: FC = () => {
       [
         {
           text: "Cancel",
-          style: "cancel"
+          style: "cancel",
         },
         {
           text: "Logout",
@@ -90,8 +68,8 @@ const SettingsPage: FC = () => {
               console.error('Logout error:', error);
               Alert.alert('Error', 'Failed to logout. Please try again.');
             }
-          }
-        }
+          },
+        },
       ]
     );
   };
@@ -120,6 +98,7 @@ const SettingsPage: FC = () => {
           <View style={styles.settingItem}>
             <Text style={[styles.settingText, { color: currentColors.text }]}>Dark Mode</Text>
             <Switch
+              testID="dark-mode-switch"
               value={isDarkMode}
               onValueChange={toggleDarkMode}
               thumbColor={isDarkMode ? currentColors.primary : '#f4f3f4'}
@@ -136,6 +115,7 @@ const SettingsPage: FC = () => {
               Enable Notifications
             </Text>
             <Switch
+              testID="notifications-switch"
               value={notificationsEnabled}
               onValueChange={toggleNotifications}
               thumbColor={notificationsEnabled ? currentColors.primary : '#f4f3f4'}
@@ -150,6 +130,7 @@ const SettingsPage: FC = () => {
           <View style={styles.settingItem}>
             <Text style={[styles.settingText, { color: currentColors.text }]}>Use Biometrics</Text>
             <Switch
+              testID="biometrics-switch"
               value={biometricsEnabled}
               onValueChange={toggleBiometrics}
               thumbColor={biometricsEnabled ? currentColors.primary : '#f4f3f4'}
@@ -161,12 +142,16 @@ const SettingsPage: FC = () => {
         {/* Account Section */}
         <View style={styles.sectionContainer}>
           <Text style={[styles.sectionHeader, { color: currentColors.text }]}>Account</Text>
-          <TouchableOpacity style={styles.settingItem}>
-            <Text style={[styles.settingText, { color: currentColors.text }]}>Change Password</Text>
+          <TouchableOpacity testID="change-password" style={styles.settingItem}>
+            <Text style={[styles.settingText, { color: currentColors.text }]}>
+              Change Password
+            </Text>
             <FontAwesome name="angle-right" size={24} color={currentColors.icon} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.settingItem}>
-            <Text style={[styles.settingText, { color: currentColors.text }]}>Privacy Settings</Text>
+          <TouchableOpacity testID="privacy-settings" style={styles.settingItem}>
+            <Text style={[styles.settingText, { color: currentColors.text }]}>
+              Privacy Settings
+            </Text>
             <FontAwesome name="angle-right" size={24} color={currentColors.icon} />
           </TouchableOpacity>
         </View>
@@ -174,11 +159,11 @@ const SettingsPage: FC = () => {
         {/* About Section */}
         <View style={styles.sectionContainer}>
           <Text style={[styles.sectionHeader, { color: currentColors.text }]}>About</Text>
-          <TouchableOpacity style={styles.settingItem}>
+          <TouchableOpacity testID="terms-of-service" style={styles.settingItem}>
             <Text style={[styles.settingText, { color: currentColors.text }]}>Terms of Service</Text>
             <FontAwesome name="angle-right" size={24} color={currentColors.icon} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.settingItem}>
+          <TouchableOpacity testID="privacy-policy" style={styles.settingItem}>
             <Text style={[styles.settingText, { color: currentColors.text }]}>Privacy Policy</Text>
             <FontAwesome name="angle-right" size={24} color={currentColors.icon} />
           </TouchableOpacity>
@@ -191,7 +176,7 @@ const SettingsPage: FC = () => {
         {/* Report a Bug */}
         <View style={styles.sectionContainer}>
           <Text style={[styles.sectionHeader, { color: currentColors.text }]}>Report</Text>
-          <TouchableOpacity style={styles.settingItem} onPress={handleReportBug}>
+          <TouchableOpacity testID="report-bug" style={styles.settingItem}>
             <Text style={[styles.settingText, { color: currentColors.text }]}>Report a Bug</Text>
             <FontAwesome name="angle-right" size={24} color={currentColors.icon} />
           </TouchableOpacity>
@@ -199,6 +184,7 @@ const SettingsPage: FC = () => {
 
         {/* Logout Button */}
         <TouchableOpacity
+          testID="logout-button"
           style={[styles.logoutButton, { backgroundColor: currentColors.accent }]}
           onPress={handleLogout}
         >
@@ -253,34 +239,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   settingText: { fontSize: 16 },
-  settingSubText: { fontSize: 16, color: '#666' }, // Added this line
+  settingSubText: { fontSize: 16, color: '#666' },
   logoutButton: { marginTop: 40, paddingVertical: 15, borderRadius: 8, alignItems: 'center' },
   logoutButtonText: { fontSize: 18, fontWeight: '600' },
-
-  // Modal styles
-  modalBackground: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContainer: {
-    width: '85%',
-    padding: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  modalTitle: { fontSize: 20, fontWeight: '600', marginBottom: 15 },
-  textInput: {
-    width: '100%',
-    height: 100,
-    borderWidth: 1,
-    padding: 10,
-    borderRadius: 5,
-    marginBottom: 20,
-    textAlignVertical: 'top',
-  },
-  closeButton: { marginTop: 10 },
 });
 
 export default SettingsPage;

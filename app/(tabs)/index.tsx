@@ -1,4 +1,5 @@
-import React, { FC } from 'react';
+// Import statements
+import React, { FC, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,95 +8,121 @@ import {
   StyleSheet,
   Dimensions,
   TouchableOpacity,
+  RefreshControl, // Import RefreshControl
 } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { PieChart } from 'react-native-gifted-charts';
-import { FontAwesome } from '@expo/vector-icons';
-import { useTheme } from '../themeContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import api from '@/api/apiClient';
 
+// Get device screen dimensions
+const { width } = Dimensions.get('window');
 
-//get device screen dimensions
-const { height, width } = Dimensions.get('window');
-
-//interface definitions
-interface ExpenseItem {
-  value: number;
-  color: string;
-  label: string;
-}
-
+// Interface definitions
 interface Account {
+  id: string;
   name: string;
   balance: number;
 }
 
 interface CreditCard {
+  id: string;
   name: string;
   balance: number;
   available: number;
 }
 
-interface Asset {
+interface Institution {
+  id: string;
   name: string;
-  value: number;
+  accounts: Account[];
+  creditCards: CreditCard[];
 }
 
 const Page: FC = () => {
-  const { theme, toggleTheme } = useTheme(); 
-  const currentColors = Colors[theme.dark ? 'dark' : 'light'];
+  const colorScheme = useColorScheme();
+  const currentColors = Colors[colorScheme ?? 'light'];
 
-  //expense data for the interactive graph (will be got from api in next sprint)
-  const expenseData: ExpenseItem[] = [
-    { value: 500, color: currentColors.accent, label: 'Food' },
-    { value: 200, color: currentColors.secondary, label: 'Transport' },
-    { value: 300, color: currentColors.primary, label: 'Utilities' },
-    { value: 400, color: currentColors.icon, label: 'Rent' },
-    { value: 100, color: currentColors.tint, label: 'Entertainment' },
-  ];
+  const [institutions, setInstitutions] = useState<Institution[]>([]);
+  const [totalBalance, setTotalBalance] = useState(0);
 
-  //total expenses
-  const totalExpenses = expenseData.reduce((sum, item) => sum + item.value, 0);
+  // State for refreshing
+  const [refreshing, setRefreshing] = useState(false);
 
-  //example accounts data (test)
-  const accounts: Account[] = [
-    { name: 'Checking Account', balance: 2500 },
-    { name: 'Savings Account', balance: 10000 },
-    { name: 'Investment Account', balance: 15000 },
-  ];
+  const fetchData = async () => {
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) return;
 
-  //calculate total balance
-  const totalBalance = accounts.reduce((sum, account) => sum + account.balance, 0);
+      // Fetch institutions
+      const institutionResponse = await api.post('/user/userinfo', { id: userId });
+      const institutionsData = institutionResponse.data.items || [];
+      let calculatedBalance = 0;
+      console.log('Institutions:', institutionsData);
 
-  //credit cards data (test)
-  const creditCards: CreditCard[] = [
-    { name: 'Visa', balance: 1000, available: 4000 },
-    { name: 'MasterCard', balance: 500, available: 3500 },
-  ];
+      const formattedInstitutions: Institution[] = institutionsData.map((institution: any) => {
+        const accounts = institution.accounts.map((account: any) => ({
+          id: account.id,
+          name: account.name,
+          balance: account.balances[0]?.current || 0,
+        }));
 
-  //assets data (test)
-  const assets: Asset[] = [
-    { name: 'Stocks', value: 20000 },
-    { name: 'Real Estate', value: 150000 },
-    { name: 'Car', value: 15000 },
-  ];
+        const creditCards =
+          institution.creditCards?.map((card: any) => ({
+            id: card.id,
+            name: card.name,
+            balance: card.balances?.current || 0,
+            available: card.balances?.available || 0,
+          })) || [];
 
-  //important alerts
-  const alerts: string[] = [
-    'Your electricity bill is due tomorrow.',
-    'Unusual spending detected on your Visa card.',
-  ];
+        // Calculate total balance
+        calculatedBalance += accounts.reduce((sum: number, acc: Account) => sum + acc.balance, 0);
+
+        return {
+          id: institution.institution.id,
+          name: institution.institution.name,
+          accounts,
+          creditCards,
+        };
+      });
+
+      setInstitutions(formattedInstitutions);
+      setTotalBalance(calculatedBalance);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // Pull-to-refresh handler
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchData();
+    setRefreshing(false);
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: currentColors.background }]}>
-      <ScrollView showsVerticalScrollIndicator= {false} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         {/* Interactive Graph Section */}
         <View style={styles.graphContainer}>
-          <Text style={[styles.sectionTitle, { color: currentColors.text }]}>
-            Overview
-          </Text>
+          <Text style={[styles.sectionTitle, { color: currentColors.text }]}>Overview</Text>
           <PieChart
-            data={expenseData}
+            data={institutions.map((inst, index) => ({
+              value: inst.accounts.reduce((sum, acc) => sum + acc.balance, 0),
+              color: [currentColors.accent, currentColors.primary, currentColors.secondary][index % 3],
+              label: inst.name,
+            }))}
             donut
             radius={150}
             innerRadius={100}
@@ -103,135 +130,84 @@ const Page: FC = () => {
             centerLabelComponent={() => (
               <View style={styles.centerLabel}>
                 <Text style={[styles.centerLabelAmount, { color: currentColors.text }]}>
-                  ${totalExpenses}
+                  ${totalBalance.toFixed(2)}
                 </Text>
                 <Text style={[styles.centerLabelText, { color: currentColors.text }]}>
-                  Total Expenses
+                  Total Balance
                 </Text>
               </View>
             )}
-            onPress={(item: ExpenseItem, index: number) => {
-              //handle slice press (e.g., navigate to detailed view)
-            }}
           />
         </View>
 
-        {/* Accounts Summary */}
+        {/* Accounts Summary by Institution */}
         <View style={styles.accountsContainer}>
           <Text style={[styles.sectionTitle, { color: currentColors.text }]}>Accounts</Text>
-          {accounts.map((account, index) => (
-            <TouchableOpacity key={index} style={styles.accountItem}>
-              <Text style={[styles.accountName, { color: currentColors.text }]}>
-                {account.name}
-              </Text>
-              <Text style={[styles.accountBalance, { color: currentColors.primary }]}>
-                ${account.balance}
-              </Text>
-            </TouchableOpacity>
-          ))}
-          <View style={styles.totalBalanceContainer}>
-            <Text style={[styles.totalBalanceLabel, { color: currentColors.text }]}>
-              Total Balance
+          {institutions.length > 0 ? (
+            institutions.map((inst) => (
+              <View key={inst.id} style={styles.institutionContainer}>
+                <Text style={[styles.institutionName, { color: currentColors.accent }]}>
+                  {inst.name}
+                </Text>
+                {inst.accounts.map((account) => (
+                  <TouchableOpacity key={account.id} style={styles.accountItem}>
+                    <Text style={[styles.accountName, { color: currentColors.text }]}>
+                      {account.name}
+                    </Text>
+                    <Text style={[styles.accountBalance, { color: currentColors.primary }]}>
+                      ${account.balance.toFixed(2)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ))
+          ) : (
+            <Text style={[styles.noDataText, { color: currentColors.text }]}>
+              No accounts available.
             </Text>
-            <Text style={[styles.totalBalanceValue, { color: currentColors.primary }]}>
-              ${totalBalance}
-            </Text>
-          </View>
+          )}
         </View>
 
         {/* Credit Cards Summary */}
         <View style={styles.creditCardsContainer}>
-          <Text style={[styles.sectionTitle, { color: currentColors.text }]}>
-            Credit Cards
-          </Text>
-          {creditCards.map((card, index) => (
-            <TouchableOpacity key={index} style={styles.cardItem}>
-              <View>
-                <Text style={[styles.cardName, { color: currentColors.text }]}>{card.name}</Text>
-                <Text
-                  style={[styles.cardAvailable, { color: currentColors.secondary }]}
-                >
-                  Available: ${card.available}
+          <Text style={[styles.sectionTitle, { color: currentColors.text }]}>Credit Cards</Text>
+          {institutions.flatMap((inst) => inst.creditCards).length > 0 ? (
+            institutions.flatMap((inst) => inst.creditCards).map((card) => (
+              <TouchableOpacity key={card.id} style={styles.cardItem}>
+                <View>
+                  <Text style={[styles.cardName, { color: currentColors.text }]}>{card.name}</Text>
+                  <Text style={[styles.cardAvailable, { color: currentColors.secondary }]}>
+                    Available: ${card.available.toFixed(2)}
+                  </Text>
+                </View>
+                <Text style={[styles.cardBalance, { color: currentColors.accent }]}>
+                  Balance: ${card.balance.toFixed(2)}
                 </Text>
-              </View>
-              <Text style={[styles.cardBalance, { color: currentColors.accent }]}>
-                Balance: ${card.balance}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Assets Overview */}
-        <View style={styles.assetsContainer}>
-          <Text style={[styles.sectionTitle, { color: currentColors.text }]}>Assets</Text>
-          {assets.map((asset, index) => (
-            <TouchableOpacity key={index} style={styles.assetItem}>
-              <Text style={[styles.assetName, { color: currentColors.text }]}>
-                {asset.name}
-              </Text>
-              <Text style={[styles.assetValue, { color: currentColors.primary }]}>
-                ${asset.value}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Important Alerts */}
-        <View style={styles.alertsContainer}>
-          <Text style={[styles.sectionTitle, { color: currentColors.text }]}>
-            Important Alerts
-          </Text>
-          {alerts.map((alert, index) => (
-            <View key={index} style={styles.alertItem}>
-              <FontAwesome
-                name="exclamation-circle"
-                size={20}
-                color={currentColors.accent}
-                style={{ marginRight: 10 }}
-              />
-              <Text style={[styles.alertText, { color: currentColors.text }]}>{alert}</Text>
-            </View>
-          ))}
+              </TouchableOpacity>
+            ))
+          ) : (
+            <Text style={[styles.noDataText, { color: currentColors.text }]}>
+              No credit cards available.
+            </Text>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 };
 
-//styles
+// Styles
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingVertical: 20,
-    paddingBottom: 70
-  },
-  graphContainer: {
-    alignItems: 'center',
-    marginVertical: 20,
-  },
-  centerLabel: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  centerLabelAmount: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  centerLabelText: {
-    fontSize: 16,
-    color: '#666',
-  },
-  sectionTitle: {
-    fontSize: 22,
-    fontWeight: '600',
-    marginBottom: 10,
-  },
-  accountsContainer: {
-    marginHorizontal: 20,
-    marginVertical: 10,
-  },
+  container: { flex: 1 },
+  scrollContent: { paddingVertical: 20, paddingBottom: 70 },
+  graphContainer: { alignItems: 'center', marginVertical: 20 },
+  centerLabel: { justifyContent: 'center', alignItems: 'center' },
+  centerLabelAmount: { fontSize: 24, fontWeight: '600' },
+  centerLabelText: { fontSize: 16, color: '#666' },
+  sectionTitle: { fontSize: 22, fontWeight: '600', marginBottom: 10 },
+  accountsContainer: { marginHorizontal: 20, marginVertical: 10 },
+  institutionContainer: { marginBottom: 20 },
+  institutionName: { fontSize: 18, fontWeight: '700', marginBottom: 10 },
   accountItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -239,30 +215,9 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ccc',
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  accountName: {
-    fontSize: 16,
-  },
-  accountBalance: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  totalBalanceContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 15,
-  },
-  totalBalanceLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  totalBalanceValue: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  creditCardsContainer: {
-    marginHorizontal: 20,
-    marginVertical: 10,
-  },
+  accountName: { fontSize: 16 },
+  accountBalance: { fontSize: 16, fontWeight: '500' },
+  creditCardsContainer: { marginHorizontal: 20, marginVertical: 10 },
   cardItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -270,48 +225,10 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ccc',
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  cardName: {
-    fontSize: 16,
-  },
-  cardAvailable: {
-    fontSize: 14,
-    color: '#666',
-  },
-  cardBalance: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  assetsContainer: {
-    marginHorizontal: 20,
-    marginVertical: 10,
-  },
-  assetItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 15,
-    borderBottomColor: '#ccc',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  assetName: {
-    fontSize: 16,
-  },
-  assetValue: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  alertsContainer: {
-    marginHorizontal: 20,
-    marginVertical: 10,
-  },
-  alertItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-  },
-  alertText: {
-    fontSize: 16,
-    flex: 1,
-  },
+  cardName: { fontSize: 16 },
+  cardAvailable: { fontSize: 14, color: '#666' },
+  cardBalance: { fontSize: 16, fontWeight: '500' },
+  noDataText: { fontSize: 16, fontStyle: 'italic', textAlign: 'center', marginTop: 10 },
 });
 
 export default Page;

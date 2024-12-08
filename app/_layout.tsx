@@ -7,7 +7,8 @@ import { ThemeProvider, usePersistedTheme } from './themeContext';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
-import { AuthProvider } from './auth/AuthProvider';
+import { useColorScheme } from '@/hooks/useColorScheme';
+import { AuthProvider } from '../components/auth/AuthProvider';
 import { useAuthProtection } from '@/hooks/useAuthProtection';
 
 SplashScreen.preventAutoHideAsync();

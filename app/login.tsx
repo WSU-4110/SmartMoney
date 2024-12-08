@@ -10,7 +10,7 @@ import {
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { FontAwesome } from '@expo/vector-icons';
-import { useAuth } from '@/app/auth/AuthProvider';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { router } from 'expo-router';
 import { useTheme } from './themeContext';
 

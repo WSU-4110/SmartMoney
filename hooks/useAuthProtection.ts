@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useSegments, useRouter } from 'expo-router';
-import { useAuth } from '@/app/auth/AuthProvider';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 export function useAuthProtection() {
   const segments = useSegments();
