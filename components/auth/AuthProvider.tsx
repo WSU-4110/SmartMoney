@@ -1,3 +1,4 @@
+//imports for dependencies and file directories below, if anything is underlined red here it means you are missing dependencies. So please make sure to check out our readme to get the neccessary dependencies.
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import * as WebBrowser from 'expo-web-browser';
 import { makeRedirectUri, useAuthRequest } from 'expo-auth-session';
@@ -5,14 +6,18 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
 import api from '../../api/apiClient';
 
+// Ensures any existing auth sessions are handled correctly and properly. 
 WebBrowser.maybeCompleteAuthSession();
 
+
+// Defining types/variables for Auth0 user datas.
 type Auth0User = {
   email: string;
   name: string;
   picture?: string;
 };
 
+// Defining the authentication context
 type AuthContextType = {
   user: Auth0User | null;
   loading: boolean;
@@ -20,13 +25,14 @@ type AuthContextType = {
   logout: () => Promise<void>;
 };
 
+// Creating the authentication context for application.
 const AuthContext = createContext<AuthContextType | null>(null);
 
-// Auth0 credentials here! 
+// Auth0  config credentials here! 
 const auth0ClientId = 'Pnak3Yy0ajxOYgJahmUw02s8lengVT60';
 const auth0Domain = 'dev-rcywf4y1jwsrcvo1.us.auth0.com';
 
-// Auth0 endpoints here! 
+// Auth0 endpoints here! (For authentication flow)
 const discovery = {
   authorizationEndpoint: `https://${auth0Domain}/authorize`,
   tokenEndpoint: `https://${auth0Domain}/oauth/token`,
@@ -34,10 +40,12 @@ const discovery = {
 };
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+// Management for user data, loading state, and authentication errors
   const [user, setUser] = useState<Auth0User | null>(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
 
+// Configured authentication request using expo-auth-session
   const [request, response, promptAsync] = useAuthRequest(
     {
       clientId: auth0ClientId,
@@ -53,7 +61,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     },
     discovery
   );
-
+  // Loading user data when component loads and sucesfully runs authentication.
   useEffect(() => {
     loadUser();
   }, []);
@@ -147,7 +155,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         path: 'expo-auth-session'
       });
       
-      // First, clear the Auth0 session
+   // First, clear the Auth0 session
       const logoutUrl = `https://${auth0Domain}/v2/logout?` +
         `client_id=${auth0ClientId}` +
         `&returnTo=${encodeURIComponent(returnTo)}` +
@@ -171,7 +179,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(false);
     }
   };
-
+// Providing authentication context to children components
   return (
     <AuthContext.Provider value={{ user, login, logout, loading }}>
       {children}
