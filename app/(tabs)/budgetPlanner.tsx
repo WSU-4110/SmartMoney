@@ -91,13 +91,13 @@ const DataPage: FC = () => {
 
   // Handlers
   const handleAddTransaction = () => {
-    if (
+    if ( // Checks for valid inputs for date, amount and category.
       newTransaction.date &&
       newTransaction.amount &&
       newTransaction.category &&
       !isNaN(parseFloat(newTransaction.amount))
     ) {
-      setTransactions([
+      setTransactions([ // Adding a new transaction to the list of transactions
         ...transactions,
         {
           id: transactions.length + 1,
@@ -120,7 +120,7 @@ const DataPage: FC = () => {
   };
 
   const handleSetBudget = () => {
-    if (newBudget && selectedCategory && !isNaN(parseFloat(newBudget))) {
+    if (newBudget && selectedCategory && !isNaN(parseFloat(newBudget))) { // Check if the fields are valid
       setCategoryBudgets({
         ...categoryBudgets,
         [selectedCategory]: parseFloat(newBudget),
@@ -178,7 +178,7 @@ const DataPage: FC = () => {
     };
   });
 
-  return (
+  return ( //Frontend look for the page.
     <SafeAreaView style={[styles.container, { backgroundColor: currentColors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {/* Header */}

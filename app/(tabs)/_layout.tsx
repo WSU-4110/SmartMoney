@@ -12,7 +12,7 @@ export default function TabLayout() {
 
   return (
     <Tabs
-      screenOptions={{
+      screenOptions={{ // The layout of what the screen will be displayed
         tabBarStyle:{
           backgroundColor: colorScheme === 'dark' ? Colors.dark.background : Colors.light.background,
           position: 'absolute',
@@ -37,7 +37,7 @@ export default function TabLayout() {
         headerShown: false,
       }}>
 
-      <Tabs.Screen
+      <Tabs.Screen //Shows the tab names and what the tab will look like.
         name="accounts"
         options={{
           title: 'Accounts',

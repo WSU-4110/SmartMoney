@@ -17,7 +17,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
 
-interface Transaction {
+interface Transaction { //Helps with the Transaction status
   id: string;
   date: string;
   description: string;
@@ -25,14 +25,14 @@ interface Transaction {
   type: 'debit' | 'credit';
 }
 
-interface Account {
+interface Account { // Helps with making a new Account
   id: string;
   name: string;
   balance: number;
   transactions: Transaction[];
 }
 
-interface Institution {
+interface Institution { //Helps with bank company types
   id: string;
   name: string;
   accounts: Account[];
@@ -49,9 +49,9 @@ const DetailedAccountPage: FC = () => {
   // State for refreshing
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchAccountDetails = async () => {
+  const fetchAccountDetails = async () => { // Detials about the account
     try {
-      const userId = await AsyncStorage.getItem('userId');
+      const userId = await AsyncStorage.getItem('userId'); 
       if (!userId) return;
 
       // Fetch account and transaction data from your existing endpoints
@@ -61,7 +61,7 @@ const DetailedAccountPage: FC = () => {
       const institutionsData = institutionResponse.data.items || [];
       const transactionsData = transactionResponse.data.transactions || [];
 
-      const institutions = institutionsData.map((institution: any) => {
+      const institutions = institutionsData.map((institution: any) => { //Information for data of the bank account.
         const institutionAccounts = institution.accounts.map((account: any) => {
           const accountTransactions = transactionsData
             .filter((tran: any) => tran.accountId === account.id)
@@ -105,24 +105,24 @@ const DetailedAccountPage: FC = () => {
     }
   };
 
-  useEffect(() => {
+  useEffect(() => { // Used to call the method for the fetchAccountDetails()
     fetchAccountDetails();
   }, []);
 
-  const onRefresh = async () => {
+  const onRefresh = async () => { //Updates the data 
     setRefreshing(true);
     await fetchAccountDetails();
     setRefreshing(false);
   };
 
-  const generateChartData = (transactions: Transaction[], initialBalance: number) => {
+  const generateChartData = (transactions: Transaction[], initialBalance: number) => { //Generates the chart data
     const sortedTransactions = [...transactions].sort(
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
     );
 
-    let cumulativeBalance = initialBalance;
+    let cumulativeBalance = initialBalance; // Before the transaction update.
 
-    const chartData = sortedTransactions.map((tran) => {
+    const chartData = sortedTransactions.map((tran) => { // After the transaction update
       cumulativeBalance += tran.type === 'credit' ? tran.amount : -tran.amount;
       return {
         value: cumulativeBalance,
@@ -130,12 +130,12 @@ const DetailedAccountPage: FC = () => {
       };
     });
 
-    return [{ value: initialBalance, label: 'Start' }, ...chartData];
+    return [{ value: initialBalance, label: 'Start' }, ...chartData]; // Returns the chartlayout from the initial date, to current
   };
 
   const styles = createStyles(currentColors);
 
-  return (
+  return ( //The looks for the page frontend.
     <View style={{ flex: 1, backgroundColor: currentColors.background }}>
       <SafeAreaView style={styles.container}>
         <FlatList
@@ -321,7 +321,7 @@ const DetailedAccountPage: FC = () => {
   );
 };
 
-const createStyles = (currentColors: any) =>
+const createStyles = (currentColors: any) => //Style for the page frontend.
   StyleSheet.create({
     container: {
       flex: 1,

@@ -105,7 +105,7 @@ const Page: FC = () => {
     setRefreshing(false);
   };
 
-  return (
+  return ( //The frontend page look
     <SafeAreaView style={[styles.container, { backgroundColor: currentColors.background }]}>
       <ScrollView
         showsVerticalScrollIndicator={false}

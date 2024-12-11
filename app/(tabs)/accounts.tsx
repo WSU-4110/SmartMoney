@@ -256,7 +256,7 @@ const AccountsPage = () => {
     resetModal();
   };
 
-  const resetModal = () => {
+  const resetModal = () => { // Reset modal state
     setNewName('');
     setNewBalance('');
     setNewAvailable('');
@@ -321,7 +321,7 @@ const AccountsPage = () => {
   // Create styles with dynamic colors
   const styles = createStyles(currentColors);
 
-  return (
+  return ( //Frontend look for the page
     <SafeAreaView style={[styles.container, { backgroundColor: currentColors.background }]}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}

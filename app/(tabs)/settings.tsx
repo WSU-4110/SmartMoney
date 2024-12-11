@@ -39,7 +39,7 @@ const SettingsPage: FC = () => {
     // logic to enable/disable biometrics will be added here
   };
 
-  const handleLogout = async () => {
+  const handleLogout = async () => { // logic for handling logout
     Alert.alert(
       "Logout",
       "Are you sure you want to logout?",
@@ -64,7 +64,7 @@ const SettingsPage: FC = () => {
     );
   };
 
-  return (
+  return ( //The frontend page look.
     <SafeAreaView style={[styles.container, { backgroundColor: currentColors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={[styles.sectionTitle, { color: currentColors.text }]}>Settings</Text>
