@@ -2,6 +2,11 @@
 
 SmartMoney is a budgeting app built using Expo and React Native. SmartMoney is a mobile application designed to help users manage their finances, set budgets, track spending, and reach financial goals. The app provides features such as budgeting, expense tracking, goal setting, and financial reporting. It also integrates with the Plaid API for secure financial data retrieval.
 
+
+
+Dependencies shown here to build and compile our project. 
+________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
 ## Installation
 ### Clone Repo
 ```
